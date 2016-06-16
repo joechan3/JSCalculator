@@ -1,4 +1,4 @@
-# A JavaScript Calculator
+# A JavaScript Calculator (Under Construction)
 
 A basic calculator web app written in JavaScript.
 [https://joechan3.github.io/JSCalculator](https://joechan3.github.io/JSCalculator)
