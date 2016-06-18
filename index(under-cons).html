@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <link rel="stylesheet" href="css/style.css">
+    <!-- IE8 Support -->
+    <!--[if lt IE 9]>
+       <script src="js/html5shiv.js"></script>
+       <script src="js/respond.js"></script>
+     <![endif]-->
+
+    <title>JavaScript Calculator</title>
+</head>
+
+<body>
+
+    <h1>JavaScript Calculator</h1>
+
+    <div class="calc-body">
+        <div class="calc-display">
+            <!--TODO[]:Dynamically populate this-->
+            <p>012345</p>
+        </div>
+        <div class="calc-keypad">
+            <div class="keypad-row">
+                <button type="button" class="key-spacer"></button>
+                <!--TODO[]:script toggle clear and backspace icon-->
+                <button type="button" class="key-operator">&#65513;</button>
+            </div>
+            <div class="keypad-row">
+                <button type="button" class="key-number">7</button>
+                <button type="button" class="key-number">8</button>
+                <button type="button" class="key-number">9</button>
+                <button type="button" class="key-operator">&divide;</button>
+            </div>
+            <div class="keypad-row">
+                <button type="button" class="key-number">4</button>
+                <button type="button" class="key-number">5</button>
+                <button type="button" class="key-number">6</button>
+                <button type="button" class="key-operator">&times;</button>
+            </div>
+            <div class="keypad-row">
+                <button type="button" class="key-number">1</button>
+                <button type="button" class="key-number">2</button>
+                <button type="button" class="key-number">3</button>
+                <button type="button" class="key-operator">&minus;</button>
+            </div>
+            <div class="keypad-row">
+                <button type="button" class="key-number">.</button>
+                <button type="button" class="key-number">0</button>
+                <button type="button" class="key-operator">=</button>
+                <button type="button" class="key-operator">+</button>
+            </div>
+        </div>
+        <!--.calc-keypad-->
+    </div>
+    <!--.calc-body-->
+
+
+    <footer role="contentinfo">
+        <p>
+            JavaScript Calculator coded by <a href="https://github.com/joechan3" target="_blank" title="View Joseph Chan&apos;s GitHub profile">Joseph Chan</a>
+        </p>
+    </footer>
+
+    <script src="js/jquery-1.12.4.min.js"></script>
+    <script src="js/script.js"></script>
+</body>
+
+</html>

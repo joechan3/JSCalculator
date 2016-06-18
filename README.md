@@ -7,7 +7,6 @@ A basic calculator web app written in JavaScript.
 
 * HTML
 * CSS
-* Bootstrap
 * jQuery
 * JavaScript
 * Brackets
@@ -23,4 +22,4 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## Acknowledgments
 
-* [TBD](#)
+* [Design UI - Calculator by Andrew Golev](https://www.behance.net/gallery/33307411/Design-UI-Calculator)
