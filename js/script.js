@@ -28,6 +28,7 @@ $(document).ready(function myCalculator() {
     var display = ""; //Holds what is displayed to the user.
     var strNumber = ""; //Temporary holder for numbers (as strings) inputted by the user
     var expressionChain = []; //Holds the current chain of numbers and operations inputted by the user
+    
     var answer = 0; //Holds the final total
 
     function updateDisplay(btn) {
@@ -125,35 +126,19 @@ $(document).ready(function myCalculator() {
         var indexOfLastOperand;
         var lastChainItem = expressionChain[expressionChain.length - 1];
 
-        if (str === "backspace") {
-            if (lastChainItem === "add" || lastChainItem === "minus" || lastChainItem === "times" || lastChainItem === "divide") {
-                expressionChain.pop();
-                console.log(expressionChain);
-            } else {
-                strNumber = "";
-                console.log(expressionChain);
-            }
-        } else {
-            //This condition is required for when backspace was applied to an operator
-            if (isNaN(lastChainItem)){
-                expressionChain.push(parseFloat(strNumber, 10));
-            }
-            expressionChain.push(str);
+        expressionChain.push(parseFloat(strNumber, 10));
+        expressionChain.push(str);
+        console.log(expressionChain);
+        strNumber = "";
+        indexOfLastOperator = expressionChain.length - 3;
+        indexOfLastOperand = expressionChain.length - 2;
+
+        //x - y also means x + (-y)
+        if (expressionChain[indexOfLastOperator] === "minus") {
+            expressionChain[indexOfLastOperator] = "add";
+            expressionChain[indexOfLastOperand] *= -1;
             console.log(expressionChain);
-            strNumber = "";
-            indexOfLastOperator = expressionChain.length - 3;
-            indexOfLastOperand = expressionChain.length - 2;
-
-            //x - y also means x + (-y)
-            if (expressionChain[indexOfLastOperator] === "minus") {
-                expressionChain[indexOfLastOperator] = "add";
-                expressionChain[indexOfLastOperand] *= -1;
-                console.log(expressionChain);
-            }
         }
-
-
-
     }
 
     //Find final total based on BEDMAS rule (Brackets, Exponents, Division, Multiplication, Addition, Subtraction).
@@ -176,6 +161,10 @@ $(document).ready(function myCalculator() {
         answer /= 100;
     }
 
+    function backspace(){
+        
+    }
+    
     $(btns.key0).on("click", function () {
         updateDisplay(0);
         strNumber += "0";
@@ -229,8 +218,16 @@ $(document).ready(function myCalculator() {
     });
 
     $(btns.keyClear).on("click", function () {
+        var lastChainItem = expressionChain[expressionChain.length - 1];
         updateDisplay(10);
-        updateExpChain("backspace");
+        
+        if (lastChainItem !== null){
+            backspace();
+        //TODO[]: Clear function
+        } else {
+            
+        }
+        
     });
 
     $(btns.keyDiv).on("click", function () {
@@ -241,6 +238,7 @@ $(document).ready(function myCalculator() {
         updateDisplay(12);
     });
 
+    //TODO[]:NaN when trying to make first number a negative number
     $(btns.keyMinus).on("click", function () {
         updateDisplay(13);
         updateExpChain("minus");
