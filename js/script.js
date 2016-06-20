@@ -3,7 +3,6 @@
 //This calculator simplifies subtraction by multiplying the second number by -1, i.e. x - y is x + (-y).
 //Likewise division is simplified by converting the second number x to 1/x, i.e. x / y is x * (1/y).
 $(document).ready(function myCalculator() {
-
     "use strict";
 
     var btns = {
@@ -25,12 +24,12 @@ $(document).ready(function myCalculator() {
         keyEquals: "button:eq(16)",
         keyPlus: "button:eq(17)"
     };
-    var display = ""; //Holds what is displayed to the user.
+    var display = ""; //Holds what is to be displayed to the user.
     var strNumber = ""; //Temporary holder for numbers (as strings) inputted by the user
     var expressionChain = []; //Holds the current chain of numbers and operations inputted by the user
-    
     var answer = 0; //Holds the final total
-
+    var lastAnswer = null; //Holds the value of the final solution (when "=" was pressed) of the last calculation.
+    
     function updateDisplay(btn) {
         var toConcat = "";
         var lastChar = display[display.length - 1];
@@ -66,14 +65,9 @@ $(document).ready(function myCalculator() {
         case 9:
             toConcat = "9";
             break;
-        case 10: //Backspace or Clear button
+        case 10: //Clear button
             toConcat = "";
-            display = display.split("");
-            display.pop();
-            display = display.join("");
-            if (display.length === 0 || lastChar === ";") {
-                display = "&nbsp;";
-            }
+            display = "&nbsp;";
             break;
         case 11: //Division button
             //";" represents the last part of any HTML entity such as "&plus;", "&divide;", etc.
@@ -91,18 +85,24 @@ $(document).ready(function myCalculator() {
             }
             break;
         case 13: //Minus button
-            if (lastChar !== ";" && lastChar !== ".") {
-                toConcat = "&minus;";
-            } else {
-                toConcat = "";
-            }
+            toConcat = "-";
             break;
+        case 13.1: //Minus button w/ last answer available
+            display = "";
+            $(".calc-display p").html(display);
+            toConcat = lastAnswer + "&minus;";
+            break;
+        case 13.2: //Negative button
+            toConcat = "-";
+            break;
+
         case 14: //Sum button
-            if (lastChar !== ";" && lastChar !== ".") {
-                toConcat = "&plus;";
-            } else {
-                toConcat = "";
-            }
+            toConcat = "&plus;";
+            break;
+        case 14.1: //Sum button w/ last answer available
+            display = "";
+            $(".calc-display p").html(display);
+            toConcat = lastAnswer + "&plus;";
             break;
         case 15: //Decimal button
             toConcat = ".";
@@ -111,42 +111,55 @@ $(document).ready(function myCalculator() {
             toConcat = "";
             display = answer;
             break;
-
         }
 
         display += toConcat;
-
         $(".calc-display p").html(display);
-
     }
-    //TODO[]: Create a separate backspace function
-    //This populates the expressionChain array. It is triggered by the -,+,/,x, and = buttons.
+
+    //updateExpChain populates the expressionChain array. It is triggered by the -,+,/,x, C, and = buttons.
     function updateExpChain(str) {
         var indexOfLastOperator;
         var indexOfLastOperand;
         var lastChainItem = expressionChain[expressionChain.length - 1];
 
-        expressionChain.push(parseFloat(strNumber, 10));
-        expressionChain.push(str);
-        console.log(expressionChain);
-        strNumber = "";
-        indexOfLastOperator = expressionChain.length - 3;
-        indexOfLastOperand = expressionChain.length - 2;
-
-        //x - y also means x + (-y)
-        if (expressionChain[indexOfLastOperator] === "minus") {
-            expressionChain[indexOfLastOperator] = "add";
-            expressionChain[indexOfLastOperand] *= -1;
+        if (str === "clear") {
+            expressionChain = [];
+            lastAnswer = null;
+        } else {
+            expressionChain.push(parseFloat(strNumber, 10));
+            expressionChain.push(str);
             console.log(expressionChain);
+            strNumber = "";
+            indexOfLastOperator = expressionChain.length - 3;
+            indexOfLastOperand = expressionChain.length - 2;
+
+            //x - y also means x + (-y)
+            if (expressionChain[indexOfLastOperator] === "minus") {
+                expressionChain[indexOfLastOperator] = "add";
+                expressionChain[indexOfLastOperand] *= -1;
+                console.log(expressionChain);
+            }
+        }
+
+
+    }
+
+    //TODO[]: Check for Errors
+    function checkForErrors() {
+        var lastChainItem = expressionChain[expressionChain.length - 1];
+
+        //If the last thing inputted by the user is an operator and he tries to solve the expression
+        //then ignore this last operator and solve.
+        if (isNaN(lastChainItem)) {
+            expressionChain.pop();
         }
     }
 
-    //Find final total based on BEDMAS rule (Brackets, Exponents, Division, Multiplication, Addition, Subtraction).
-    //First multiply all possible then add all
-    function reduceExpChain() {
-        var i;
-        var indexAorS = []; //index of first instance of add() or subtract() functions in the expressionChain array.
-
+    //Find final solution based on BEDMAS rule (Brackets, Exponents, Division, Multiplication, Addition, Subtraction).
+    //TODO[]: First multiply all possible then add all
+    //TODO[]: Fix floating point precision error
+    function solveExpChain() {
         //Find D's and M's and reduce
 
         //Add all numbers
@@ -154,17 +167,11 @@ $(document).ready(function myCalculator() {
             if (!isNaN(element)) {
                 //To avoid precision errors like 0.1 + 0.2 = 0.30000000000000004 we multiply each element by 100
                 //This will be canceled out with the line directly after this forEach function
-                element *= 100;
                 answer += element;
             }
         });
-        answer /= 100;
     }
 
-    function backspace(){
-        
-    }
-    
     $(btns.key0).on("click", function () {
         updateDisplay(0);
         strNumber += "0";
@@ -174,7 +181,6 @@ $(document).ready(function myCalculator() {
         updateDisplay(1);
         strNumber += "1";
     });
-
 
 
     $(btns.key2).on("click", function () {
@@ -218,16 +224,8 @@ $(document).ready(function myCalculator() {
     });
 
     $(btns.keyClear).on("click", function () {
-        var lastChainItem = expressionChain[expressionChain.length - 1];
         updateDisplay(10);
-        
-        if (lastChainItem !== null){
-            backspace();
-        //TODO[]: Clear function
-        } else {
-            
-        }
-        
+        updateExpChain("clear");
     });
 
     $(btns.keyDiv).on("click", function () {
@@ -238,15 +236,37 @@ $(document).ready(function myCalculator() {
         updateDisplay(12);
     });
 
-    //TODO[]:NaN when trying to make first number a negative number
+    //Minus button can also turn a number negative.
     $(btns.keyMinus).on("click", function () {
-        updateDisplay(13);
-        updateExpChain("minus");
+        var lastChainItem = expressionChain[expressionChain.length - 1];
+        
+        if (strNumber !== "" || !isNaN(lastChainItem) || lastAnswer !== null) {
+            //Allow for chaining previous calculations' solution.
+            if (expressionChain.length === 0 && lastAnswer !== null){
+                updateDisplay(13.1);
+                expressionChain[0] = lastAnswer;
+                expressionChain[1] = "minus"; 
+            } else {
+                updateDisplay(13);
+                updateExpChain("minus");
+            }
+        } else {
+            //Turn number negative
+            strNumber += "-";
+            updateDisplay(13.2);
+        }
     });
 
     $(btns.keyPlus).on("click", function () {
-        updateDisplay(14);
-        updateExpChain("add");
+        //Allow for chaining previous calculations' solution.
+        if (expressionChain.length === 0 && lastAnswer !== null) {
+            updateDisplay(14.1);
+            expressionChain[0] = lastAnswer;
+            expressionChain[1] = "add";
+        } else {
+            updateDisplay(14);
+            updateExpChain("add");
+        }
     });
 
     $(btns.keyDecimal).on("click", function () {
@@ -256,8 +276,12 @@ $(document).ready(function myCalculator() {
 
     $(btns.keyEquals).on("click", function () {
         updateExpChain("solve!");
-        reduceExpChain();
+        //checkForErrors();
+        solveExpChain();
         updateDisplay(16);
+        lastAnswer = answer;
+        expressionChain = [];
+        answer = 0;
     });
 
 });
