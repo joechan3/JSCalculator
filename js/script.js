@@ -3,7 +3,7 @@
 //This calculator simplifies subtraction by multiplying the second number by -1, i.e. x - y is x + (-y).
 //Likewise division is simplified by converting the second number y to 1/y, i.e. x / y is x * (1/y).
 
-(function myCalculator() {
+(function joesCalculator() {
     "use strict";
 
     var btns = {
@@ -119,8 +119,8 @@
         $(".calc-display p").html(display);
     }
 
-    //updateExpChain populates the expressionChain array. It is triggered by the -,+,/,x, C, and = buttons.
-    function updateExpChain(str) {
+    //Triggered by the -,+,/,x, C, and = buttons.
+    function updateExpressionChain(str) {
         var indexOfLastOperator;
         var indexOfLastOperand;
         var lastChainItem = expressionChain[expressionChain.length - 1];
@@ -164,7 +164,7 @@
     }
 
     //Find final solution based on BEDMAS rule (Brackets, Exponents, Division, Multiplication, Addition, Subtraction).
-    //Remember updateExpChain converts "minus" to "add" and "divide" to "times".
+    //Remember updateExpressionChain converts "minus" to "add" and "divide" to "times".
     //TODO[]: First multiply all possible then add all
     //TODO[]: Fix floating point precision error
     function solveExpChain() {
@@ -181,14 +181,21 @@
         var isSimplestCase = expressionChain.length === 4; //e.g. [1, "add", 1, "solve!"];
         var lastTimesOperatorIndex;
         var product = [];
-        var isGeneralCase;
+        var isGeneralCase1;
+        var isGeneralCase2;
+        var isGeneralCase3;
+        var isGeneralCase4;
 
-        for (i = 1; (i + 2) <= expressionChain.length - 1; i += 2) {
-//            debugger;
+        for (i = 1;
+            (i + 2) <= expressionChain.length - 1; i += 2) {
+                        //debugger;
             secondOperand = expressionChain[i + 1];
             firstOperator = expressionChain[i];
             secondOperator = expressionChain[i + 2];
-            isGeneralCase = firstOperator === "add" && (secondOperator === "add" || secondOperator === "solve!") && !isSimplestCase;
+            isGeneralCase1 = firstOperator === "add" && (secondOperator === "add" || secondOperator === "solve!") && !isSimplestCase;
+            isGeneralCase2 = firstOperator === "add" && (secondOperator === "times" || secondOperator === "solve!") && !isSimplestCase;
+            isGeneralCase3 = firstOperator === "times" && (secondOperator === "add" || secondOperator === "solve!") && !isSimplestCase;
+            isGeneralCase4 = firstOperator === "times" && (secondOperator === "times" || secondOperator === "solve!") && !isSimplestCase;
 
             //Simplest case
             if (isSimplestCase) {
@@ -202,47 +209,97 @@
             }
 
             //General case
-            if (isGeneralCase) {
+            if (isGeneralCase1) {
                 if (i === 1) {
                     sumChain.push(firstOperand, secondOperand);
                 } else {
                     sumChain.push(secondOperand);
                 }
+
+            } else if (isGeneralCase2) {
+
+                if (i === 1){
+                    sumChain.push(firstOperand);
+                }
+
+                for (j = i + 2; expressionChain[j] === "times"; j += 2) {
+                    if (j === i + 2) {
+                        product.push(expressionChain[j - 1], expressionChain[j + 1]);
+                    } else {
+                        product.push(expressionChain[j + 1]);
+                    }
+                }
+
+                i = j - 2;
+
+                temp = 1;
+                for (k = 0; k < product.length; k += 1) {
+                    temp *= product[k];
+                }
+
+                product = temp;
+
+                productChain.push(product);
+                product = [];
+
+                //FIXME[]: XXX
+            } else if (isGeneralCase3) {
+
+                if (i === 1){
+                    product.push(firstOperand, secondOperand);
+                }
                 
+
+                for (j = i + 2; expressionChain[j] === "times"; j += 2) {
+                    if (j === i + 2) {
+                        product.push(expressionChain[j - 1], expressionChain[j + 1]);
+                    } else {
+                        product.push(expressionChain[j + 1]);
+                    }
+                }
+
+                i = j - 2;
+
+                temp = 1;
+                for (k = 0; k < product.length; k += 1) {
+                    temp *= product[k];
+                }
+
+                product = temp;
+
+                productChain.push(product);
+                product = [];
+
+            } else if (isGeneralCase4) {
+
+                if (i === 1){
+                    product.push(firstOperand, secondOperand);
+                }
+                
+
+                for (j = i + 2; expressionChain[j] === "times"; j += 2) {
+                    
+                        product.push(expressionChain[j + 1]);
+                    
+                }
+
+                i = j - 2;
+
+                temp = 1;
+                for (k = 0; k < product.length; k += 1) {
+                    temp *= product[k];
+                }
+
+                product = temp;
+
+                productChain.push(product);
+                product = [];
+
             } 
-//            else if (firstOperator === "add" && secondOperator === "times") {
-//
-//                if (i === 1) {
-//
-//                    sumChain.push(firstOperand);
-//
-//                    for (j = i + 1; expressionChain[j] === "times"; j += 2) {
-//                        if (j === i + 1) {
-//                            product.push(expressionChain[j - 1], expressionChain[j + 1]);
-//                        }
-//                        product.push(expressionChain[j + 1]);
-//                    }
-//
-//                    i = j - 2;
-//
-//                    console.log("product is : ", product);
-//                    console.log("i is: ", i);
-//
-//                    temp = 1;
-//                    for (k = 0; k < product.length; k += 1) {
-//                        temp *= product[k];
-//                    }
-//
-//                    product = temp;
-//
-//                    productChain.push(product);
-//                    product = [];
-//                }
-//            }
         }
 
         console.log("Sumchain is: ", sumChain);
-        
+
         answer = sumChain.reduce(function addAll(a, b) {
             return a + b;
         }, 0);
@@ -306,7 +363,7 @@
 
         $(btns.keyClear).on("click", function keyClearHandler() {
             updateDisplay(10);
-            updateExpChain("clear");
+            updateExpressionChain("clear");
         });
 
         $(btns.keyDiv).on("click", function keyDivHandler() {
@@ -322,7 +379,7 @@
                 expressionChain[1] = "divide";
             } else if (operatorAllowed) {
                 updateDisplay(11);
-                updateExpChain("divide");
+                updateExpressionChain("divide");
             }
 
 
@@ -341,7 +398,7 @@
                 expressionChain[1] = "times";
             } else if (operatorAllowed) {
                 updateDisplay(12);
-                updateExpChain("times");
+                updateExpressionChain("times");
             }
 
         });
@@ -362,7 +419,7 @@
                     expressionChain[1] = "minus";
                 } else {
                     updateDisplay(13);
-                    updateExpChain("minus");
+                    updateExpressionChain("minus");
                 }
             } else {
                 //Turn number negative
@@ -384,7 +441,7 @@
                 expressionChain[1] = "add";
             } else if (operatorAllowed) {
                 updateDisplay(14);
-                updateExpChain("add");
+                updateExpressionChain("add");
             }
         });
 
@@ -397,7 +454,7 @@
         });
 
         $(btns.keyEquals).on("click", function keyEqualsHandler() {
-            updateExpChain("solve!");
+            updateExpressionChain("solve!");
             //checkForErrors();
             solveExpChain();
             updateDisplay(16);
