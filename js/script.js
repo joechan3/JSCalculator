@@ -1,8 +1,9 @@
 /*global $, console*/
-
+//TODO[]: Add a feature where are request for more than one operator in sequence is ignored.
 //This calculator simplifies subtraction by multiplying the second number by -1, i.e. x - y is x + (-y).
 //Likewise division is simplified by converting the second number x to 1/x, i.e. x / y is x * (1/y).
-$(document).ready(function myCalculator() {
+
+(function myCalculator() {
     "use strict";
 
     var btns = {
@@ -29,7 +30,8 @@ $(document).ready(function myCalculator() {
     var expressionChain = []; //Holds the current chain of numbers and operations inputted by the user
     var answer = 0; //Holds the final total
     var lastAnswer = null; //Holds the value of the final solution (when "=" was pressed) of the last calculation.
-    
+    //    var operatorCalled = false; //Holds the status of whether or not an operator like "plus" has been called.
+
     function updateDisplay(btn) {
         var toConcat = "";
         var lastChar = display[display.length - 1];
@@ -141,8 +143,6 @@ $(document).ready(function myCalculator() {
                 console.log(expressionChain);
             }
         }
-
-
     }
 
     //TODO[]: Check for Errors
@@ -160,10 +160,34 @@ $(document).ready(function myCalculator() {
     //TODO[]: First multiply all possible then add all
     //TODO[]: Fix floating point precision error
     function solveExpChain() {
+        var i;
+        var firstOperand;
+        var firstOperator;
+        var secondOperand;
+        var secondOperator;
+        var sumChain = [];
+        var productChain = [];
+        
+        for (i = 1; (i+2) <= expressionChain.length-1; i += 2){
+            firstOperand = expressionChain[0];
+            secondOperand = expressionChain[1+1];
+            firstOperator = expressionChain[i];
+            secondOperator = expressionChain[i+2];
+            
+            if (firstOperator === "add" && secondOperator === "add"){
+                if (i === 1){
+                    sumChain.push(firstOperand, secondOperand);
+                }
+                sumChain.push(secondOperand);
+            }
+        }
+        
+        
+        
         //Find D's and M's and reduce
 
         //Add all numbers
-        expressionChain.forEach(function (element) {
+        expressionChain.forEach(function addAll(element) {
             if (!isNaN(element)) {
                 //To avoid precision errors like 0.1 + 0.2 = 0.30000000000000004 we multiply each element by 100
                 //This will be canceled out with the line directly after this forEach function
@@ -172,116 +196,130 @@ $(document).ready(function myCalculator() {
         });
     }
 
-    $(btns.key0).on("click", function () {
-        updateDisplay(0);
-        strNumber += "0";
-    });
+    $(document).ready(function buttonsHandler() {
+        $(btns.key0).on("click", function key0Handler() {
+            updateDisplay(0);
+            strNumber += "0";
+        });
 
-    $(btns.key1).on("click", function () {
-        updateDisplay(1);
-        strNumber += "1";
-    });
+        $(btns.key1).on("click", function key1Handler() {
+            updateDisplay(1);
+            strNumber += "1";
+        });
+
+        $(btns.key2).on("click", function key2Handler() {
+            updateDisplay(2);
+            strNumber += "2";
+        });
+
+        $(btns.key3).on("click", function key3Handler() {
+            updateDisplay(3);
+            strNumber += "3";
+        });
+
+        $(btns.key4).on("click", function key4Handler() {
+            updateDisplay(4);
+            strNumber += "4";
+        });
+
+        $(btns.key5).on("click", function key5Handler() {
+            updateDisplay(5);
+            strNumber += "5";
+        });
+
+        $(btns.key6).on("click", function key6Handler() {
+            updateDisplay(6);
+            strNumber += "6";
+        });
+
+        $(btns.key7).on("click", function key7Handler() {
+            updateDisplay(7);
+            strNumber += "7";
+        });
+
+        $(btns.key8).on("click", function key8Handler() {
+            updateDisplay(8);
+            strNumber += "8";
+        });
+
+        $(btns.key9).on("click", function key9Handler() {
+            updateDisplay(9);
+            strNumber += "9";
+        });
+
+        $(btns.keyClear).on("click", function keyClearHandler() {
+            updateDisplay(10);
+            updateExpChain("clear");
+        });
+
+        $(btns.keyDiv).on("click", function keyDivHandler() {
+            updateDisplay(11);
+        });
+
+        $(btns.keyTimes).on("click", function keyTimesHandler() {
+            updateDisplay(12);
+        });
+
+        //Minus button can also turn a number negative.
+        $(btns.keyMinus).on("click", function keyMinusHandler() {
+            var lastChainItem = expressionChain[expressionChain.length - 1];
+
+            //Used to chain from last solution.
+            var chainingPossible = expressionChain.length === 0 && lastAnswer !== null;
 
 
-    $(btns.key2).on("click", function () {
-        updateDisplay(2);
-        strNumber += "2";
-    });
-
-    $(btns.key3).on("click", function () {
-        updateDisplay(3);
-        strNumber += "3";
-    });
-
-    $(btns.key4).on("click", function () {
-        updateDisplay(4);
-        strNumber += "4";
-    });
-
-    $(btns.key5).on("click", function () {
-        updateDisplay(5);
-        strNumber += "5";
-    });
-
-    $(btns.key6).on("click", function () {
-        updateDisplay(6);
-        strNumber += "6";
-    });
-
-    $(btns.key7).on("click", function () {
-        updateDisplay(7);
-        strNumber += "7";
-    });
-
-    $(btns.key8).on("click", function () {
-        updateDisplay(8);
-        strNumber += "8";
-    });
-
-    $(btns.key9).on("click", function () {
-        updateDisplay(9);
-        strNumber += "9";
-    });
-
-    $(btns.keyClear).on("click", function () {
-        updateDisplay(10);
-        updateExpChain("clear");
-    });
-
-    $(btns.keyDiv).on("click", function () {
-        updateDisplay(11);
-    });
-
-    $(btns.keyTimes).on("click", function () {
-        updateDisplay(12);
-    });
-
-    //Minus button can also turn a number negative.
-    $(btns.keyMinus).on("click", function () {
-        var lastChainItem = expressionChain[expressionChain.length - 1];
-        
-        if (strNumber !== "" || !isNaN(lastChainItem) || lastAnswer !== null) {
-            //Allow for chaining previous calculations' solution.
-            if (expressionChain.length === 0 && lastAnswer !== null){
-                updateDisplay(13.1);
-                expressionChain[0] = lastAnswer;
-                expressionChain[1] = "minus"; 
+            if (strNumber !== "" || !isNaN(lastChainItem) || lastAnswer !== null) {
+                //Allow for chaining previous calculations' solution.
+                if (chainingPossible) {
+                    updateDisplay(13.1);
+                    expressionChain[0] = lastAnswer;
+                    expressionChain[1] = "minus";
+                } else {
+                    updateDisplay(13);
+                    updateExpChain("minus");
+                }
             } else {
-                updateDisplay(13);
-                updateExpChain("minus");
+                //Turn number negative
+                strNumber += "-";
+                updateDisplay(13.2);
             }
-        } else {
-            //Turn number negative
-            strNumber += "-";
-            updateDisplay(13.2);
-        }
-    });
+        });
 
-    $(btns.keyPlus).on("click", function () {
-        //Allow for chaining previous calculations' solution.
-        if (expressionChain.length === 0 && lastAnswer !== null) {
-            updateDisplay(14.1);
-            expressionChain[0] = lastAnswer;
-            expressionChain[1] = "add";
-        } else {
-            updateDisplay(14);
-            updateExpChain("add");
-        }
-    });
+        $(btns.keyPlus).on("click", function keyPlusHandler() {
+            //Used to chain from last solution.
+            var chainingPossible = expressionChain.length === 0 && lastAnswer !== null;
 
-    $(btns.keyDecimal).on("click", function () {
-        updateDisplay(15);
-        strNumber += ".";
-    });
+            //Used to prevent plus operator from being applied twice or without operand.
+            var operatorAllowed = strNumber !== "";
 
-    $(btns.keyEquals).on("click", function () {
-        updateExpChain("solve!");
-        //checkForErrors();
-        solveExpChain();
-        updateDisplay(16);
-        lastAnswer = answer;
-        expressionChain = [];
-        answer = 0;
-    });
+            if (chainingPossible) {
+                updateDisplay(14.1);
+                expressionChain[0] = lastAnswer;
+                expressionChain[1] = "add";
+            } else if (operatorAllowed) {
+                updateDisplay(14);
+                updateExpChain("add");
+            }
+        });
 
-});
+        $(btns.keyDecimal).on("click", function keyDecimalHandler() {
+
+            var decimalAllowed; //TODO[]: = some Boolean
+
+            updateDisplay(15);
+            strNumber += ".";
+        });
+
+        $(btns.keyEquals).on("click", function keyEqualsHandler() {
+            updateExpChain("solve!");
+            //checkForErrors();
+            solveExpChain();
+            updateDisplay(16);
+            lastAnswer = answer;
+            expressionChain = [];
+            answer = 0;
+        });
+
+    });
+    
+})();

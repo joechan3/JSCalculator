@@ -23,3 +23,4 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 ## Acknowledgments
 
 * [Design UI - Calculator by Andrew Golev](https://www.behance.net/gallery/33307411/Design-UI-Calculator)
+* [Android Calculator UI](http://imgur.com/7qPESW3)

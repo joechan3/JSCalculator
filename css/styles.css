@@ -6,7 +6,7 @@
     Red #FF5A43
     White #FFFFFF
 */
-
+/*TODO[]: Adjust style to match android calculator's design more closely*/
 ::selection {
     background-color: orange;
     color: #FFF;
