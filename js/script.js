@@ -1,7 +1,7 @@
 /*global $, console*/
 //TODO[]: Add a feature where are request for more than one operator in sequence is ignored.
 //This calculator simplifies subtraction by multiplying the second number by -1, i.e. x - y is x + (-y).
-//Likewise division is simplified by converting the second number x to 1/x, i.e. x / y is x * (1/y).
+//Likewise division is simplified by converting the second number y to 1/y, i.e. x / y is x * (1/y).
 
 (function myCalculator() {
     "use strict";
@@ -72,19 +72,20 @@
             display = "&nbsp;";
             break;
         case 11: //Division button
-            //";" represents the last part of any HTML entity such as "&plus;", "&divide;", etc.
-            if (lastChar !== ";" && lastChar !== ".") {
-                toConcat = "&divide;";
-            } else {
-                toConcat = "";
-            }
+            toConcat = "&divide;";
+            break;
+        case 11.1: //Division button w/ last answer available
+            display = "";
+            $(".calc-display p").html(display);
+            toConcat = lastAnswer + "&divide;";
             break;
         case 12: //Times button
-            if (lastChar !== ";" && lastChar !== ".") {
-                toConcat = "&times;";
-            } else {
-                toConcat = "";
-            }
+            toConcat = "&times;";
+            break;
+        case 12.1: //Times button w/ last answer available
+            display = "";
+            $(".calc-display p").html(display);
+            toConcat = lastAnswer + "&times;";
             break;
         case 13: //Minus button
             toConcat = "-";
@@ -97,7 +98,6 @@
         case 13.2: //Negative button
             toConcat = "-";
             break;
-
         case 14: //Sum button
             toConcat = "&plus;";
             break;
@@ -142,6 +142,13 @@
                 expressionChain[indexOfLastOperand] *= -1;
                 console.log(expressionChain);
             }
+
+            //x / y also means x * (1/y)
+            if (expressionChain[indexOfLastOperator] === "divide") {
+                expressionChain[indexOfLastOperator] = "times";
+                expressionChain[indexOfLastOperand] = 1 / expressionChain[indexOfLastOperand];
+                console.log(expressionChain);
+            }
         }
     }
 
@@ -157,43 +164,93 @@
     }
 
     //Find final solution based on BEDMAS rule (Brackets, Exponents, Division, Multiplication, Addition, Subtraction).
+    //Remember updateExpChain converts "minus" to "add" and "divide" to "times".
     //TODO[]: First multiply all possible then add all
     //TODO[]: Fix floating point precision error
     function solveExpChain() {
         var i;
-        var firstOperand;
+        var j;
+        var k;
+        var temp;
+        var firstOperand = expressionChain[0];
         var firstOperator;
         var secondOperand;
         var secondOperator;
         var sumChain = [];
         var productChain = [];
-        
-        for (i = 1; (i+2) <= expressionChain.length-1; i += 2){
-            firstOperand = expressionChain[0];
-            secondOperand = expressionChain[1+1];
-            firstOperator = expressionChain[i];
-            secondOperator = expressionChain[i+2];
-            
-            if (firstOperator === "add" && secondOperator === "add"){
-                if (i === 1){
-                    sumChain.push(firstOperand, secondOperand);
-                }
-                sumChain.push(secondOperand);
-            }
-        }
-        
-        
-        
-        //Find D's and M's and reduce
+        var isSimplestCase = expressionChain.length === 4; //e.g. [1, "add", 1, "solve!"];
+        var lastTimesOperatorIndex;
+        var product = [];
+        var isGeneralCase;
 
-        //Add all numbers
-        expressionChain.forEach(function addAll(element) {
-            if (!isNaN(element)) {
-                //To avoid precision errors like 0.1 + 0.2 = 0.30000000000000004 we multiply each element by 100
-                //This will be canceled out with the line directly after this forEach function
-                answer += element;
+        for (i = 1; (i + 2) <= expressionChain.length - 1; i += 2) {
+//            debugger;
+            secondOperand = expressionChain[i + 1];
+            firstOperator = expressionChain[i];
+            secondOperator = expressionChain[i + 2];
+            isGeneralCase = firstOperator === "add" && (secondOperator === "add" || secondOperator === "solve!") && !isSimplestCase;
+
+            //Simplest case
+            if (isSimplestCase) {
+                if (firstOperator === "add") {
+                    sumChain.push(firstOperand, secondOperand);
+                    productChain = [0];
+                } else {
+                    sumChain = [0];
+                    productChain = [firstOperand * secondOperand];
+                }
             }
-        });
+
+            //General case
+            if (isGeneralCase) {
+                if (i === 1) {
+                    sumChain.push(firstOperand, secondOperand);
+                } else {
+                    sumChain.push(secondOperand);
+                }
+                
+            } 
+//            else if (firstOperator === "add" && secondOperator === "times") {
+//
+//                if (i === 1) {
+//
+//                    sumChain.push(firstOperand);
+//
+//                    for (j = i + 1; expressionChain[j] === "times"; j += 2) {
+//                        if (j === i + 1) {
+//                            product.push(expressionChain[j - 1], expressionChain[j + 1]);
+//                        }
+//                        product.push(expressionChain[j + 1]);
+//                    }
+//
+//                    i = j - 2;
+//
+//                    console.log("product is : ", product);
+//                    console.log("i is: ", i);
+//
+//                    temp = 1;
+//                    for (k = 0; k < product.length; k += 1) {
+//                        temp *= product[k];
+//                    }
+//
+//                    product = temp;
+//
+//                    productChain.push(product);
+//                    product = [];
+//                }
+//            }
+        }
+
+        console.log("Sumchain is: ", sumChain);
+        
+        answer = sumChain.reduce(function addAll(a, b) {
+            return a + b;
+        }, 0);
+
+        answer += productChain.reduce(function addAll(a, b) {
+            return a + b;
+        }, 0);
+
     }
 
     $(document).ready(function buttonsHandler() {
@@ -253,11 +310,40 @@
         });
 
         $(btns.keyDiv).on("click", function keyDivHandler() {
-            updateDisplay(11);
+            //Used to chain from last solution.
+            var chainingPossible = expressionChain.length === 0 && lastAnswer !== null;
+
+            //Used to prevent divide operator from being applied twice or without operand.
+            var operatorAllowed = strNumber !== "";
+
+            if (chainingPossible) {
+                updateDisplay(11.1);
+                expressionChain[0] = lastAnswer;
+                expressionChain[1] = "divide";
+            } else if (operatorAllowed) {
+                updateDisplay(11);
+                updateExpChain("divide");
+            }
+
+
         });
 
         $(btns.keyTimes).on("click", function keyTimesHandler() {
-            updateDisplay(12);
+            //Used to chain from last solution.
+            var chainingPossible = expressionChain.length === 0 && lastAnswer !== null;
+
+            //Used to prevent times operator from being applied twice or without operand.
+            var operatorAllowed = strNumber !== "";
+
+            if (chainingPossible) {
+                updateDisplay(12.1);
+                expressionChain[0] = lastAnswer;
+                expressionChain[1] = "times";
+            } else if (operatorAllowed) {
+                updateDisplay(12);
+                updateExpChain("times");
+            }
+
         });
 
         //Minus button can also turn a number negative.
@@ -321,5 +407,5 @@
         });
 
     });
-    
-})();
+
+}());
