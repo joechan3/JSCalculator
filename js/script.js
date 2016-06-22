@@ -6,6 +6,7 @@
 (function joesCalculator() {
     "use strict";
 
+    var answer = 0; //Holds the final total
     var btns = {
         keyClear: "button:eq(1)",
         key7: "button:eq(2)",
@@ -24,17 +25,16 @@
         key0: "button:eq(15)",
         keyEquals: "button:eq(16)",
         keyPlus: "button:eq(17)"
-    };
+    }; //DOM references to calculator buttons.
     var display = ""; //Holds what is to be displayed to the user.
-    var strNumber = ""; //Temporary holder for numbers (as strings) inputted by the user
     var expressionChain = []; //Holds the current chain of numbers and operations inputted by the user
-    var answer = 0; //Holds the final total
-    var lastAnswer = null; //Holds the value of the final solution (when "=" was pressed) of the last calculation.
-    //    var operatorCalled = false; //Holds the status of whether or not an operator like "plus" has been called.
+    var lastAnswer = null; //Holds the value of the previous calculation's final solution (when "=" was pressed).
+    var minusUsed = false; //FIXME: MINUSUSED
+    var strNumber = ""; //Temporary holder for numbers (as strings) inputted by the user
 
+    //NOTE[]: REVIEWED AND TWEAKED/TIDIED
     function updateDisplay(btn) {
-        var toConcat = "";
-        var lastChar = display[display.length - 1];
+        var toConcat = ""; //String to concatenate with display.
 
         switch (btn) {
         case 0:
@@ -113,25 +113,27 @@
             toConcat = "";
             display = answer;
             break;
+        default:
+            throw "Invalid input";
         }
 
         display += toConcat;
         $(".calc-display p").html(display);
     }
 
-    //Triggered by the -,+,/,x, C, and = buttons.
+    //NOTE[]: REVIEWED AND TWEAKED/TIDIED
+    //Triggered by operator type buttons.
     function updateExpressionChain(str) {
         var indexOfLastOperator;
         var indexOfLastOperand;
-        var lastChainItem = expressionChain[expressionChain.length - 1];
 
         if (str === "clear") {
             expressionChain = [];
             lastAnswer = null;
+            minusUsed = false;
         } else {
             expressionChain.push(parseFloat(strNumber, 10));
             expressionChain.push(str);
-            console.log(expressionChain);
             strNumber = "";
             indexOfLastOperator = expressionChain.length - 3;
             indexOfLastOperand = expressionChain.length - 2;
@@ -140,32 +142,19 @@
             if (expressionChain[indexOfLastOperator] === "minus") {
                 expressionChain[indexOfLastOperator] = "add";
                 expressionChain[indexOfLastOperand] *= -1;
-                console.log(expressionChain);
+                minusUsed = false;
             }
 
             //x / y also means x * (1/y)
             if (expressionChain[indexOfLastOperator] === "divide") {
                 expressionChain[indexOfLastOperator] = "times";
                 expressionChain[indexOfLastOperand] = 1 / expressionChain[indexOfLastOperand];
-                console.log(expressionChain);
             }
-        }
-    }
-
-    //TODO[]: Check for Errors
-    function checkForErrors() {
-        var lastChainItem = expressionChain[expressionChain.length - 1];
-
-        //If the last thing inputted by the user is an operator and he tries to solve the expression
-        //then ignore this last operator and solve.
-        if (isNaN(lastChainItem)) {
-            expressionChain.pop();
         }
     }
 
     //Find final solution based on BEDMAS rule (Brackets, Exponents, Division, Multiplication, Addition, Subtraction).
     //Remember updateExpressionChain converts "minus" to "add" and "divide" to "times".
-    //TODO[]: First multiply all possible then add all
     //TODO[]: Fix floating point precision error
     function solveExpChain() {
         var i;
@@ -186,9 +175,7 @@
         var isGeneralCase3;
         var isGeneralCase4;
 
-        for (i = 1;
-            (i + 2) <= expressionChain.length - 1; i += 2) {
-                        //debugger;
+        for (i = 1; (i + 2) <= expressionChain.length - 1; i += 2) {
             secondOperand = expressionChain[i + 1];
             firstOperator = expressionChain[i];
             secondOperator = expressionChain[i + 2];
@@ -218,7 +205,7 @@
 
             } else if (isGeneralCase2) {
 
-                if (i === 1){
+                if (i === 1) {
                     sumChain.push(firstOperand);
                 }
 
@@ -245,10 +232,10 @@
                 //FIXME[]: XXX
             } else if (isGeneralCase3) {
 
-                if (i === 1){
+                if (i === 1) {
                     product.push(firstOperand, secondOperand);
                 }
-                
+
 
                 for (j = i + 2; expressionChain[j] === "times"; j += 2) {
                     if (j === i + 2) {
@@ -272,15 +259,15 @@
 
             } else if (isGeneralCase4) {
 
-                if (i === 1){
+                if (i === 1) {
                     product.push(firstOperand, secondOperand);
                 }
-                
+
 
                 for (j = i + 2; expressionChain[j] === "times"; j += 2) {
-                    
-                        product.push(expressionChain[j + 1]);
-                    
+
+                    product.push(expressionChain[j + 1]);
+
                 }
 
                 i = j - 2;
@@ -295,7 +282,7 @@
                 productChain.push(product);
                 product = [];
 
-            } 
+            }
         }
 
         console.log("Sumchain is: ", sumChain);
@@ -381,8 +368,6 @@
                 updateDisplay(11);
                 updateExpressionChain("divide");
             }
-
-
         });
 
         $(btns.keyTimes).on("click", function keyTimesHandler() {
@@ -411,20 +396,24 @@
             var chainingPossible = expressionChain.length === 0 && lastAnswer !== null;
 
 
-            if (strNumber !== "" || !isNaN(lastChainItem) || lastAnswer !== null) {
+
+            if (!minusUsed && (strNumber !== "" || !isNaN(lastChainItem) || lastAnswer !== null)) {
                 //Allow for chaining previous calculations' solution.
                 if (chainingPossible) {
                     updateDisplay(13.1);
                     expressionChain[0] = lastAnswer;
                     expressionChain[1] = "minus";
+                    minusUsed = true;
                 } else {
                     updateDisplay(13);
                     updateExpressionChain("minus");
+                    minusUsed = true;
                 }
-            } else {
+            } else if (!minusUsed) {
                 //Turn number negative
                 strNumber += "-";
                 updateDisplay(13.2);
+                minusUsed = true;
             }
         });
 
@@ -446,16 +435,17 @@
         });
 
         $(btns.keyDecimal).on("click", function keyDecimalHandler() {
+            var decimalAllowed = strNumber !== "" && strNumber[strNumber.length - 1] !== ".";
 
-            var decimalAllowed; //TODO[]: = some Boolean
-
-            updateDisplay(15);
-            strNumber += ".";
+            if (decimalAllowed) {
+                updateDisplay(15);
+                strNumber += ".";
+            }
         });
 
         $(btns.keyEquals).on("click", function keyEqualsHandler() {
             updateExpressionChain("solve!");
-            //checkForErrors();
+            minusUsed = false;
             solveExpChain();
             updateDisplay(16);
             lastAnswer = answer;
