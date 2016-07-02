@@ -1,7 +1,9 @@
-/*global $, console*/
+/*global $, console, BigNumber*/
+/*jslint vars: true */
 //TODO[]: Add a feature where are request for more than one operator in sequence is ignored.
 //This calculator simplifies subtraction by multiplying the second number by -1, i.e. x - y is x + (-y).
 //Likewise division is simplified by converting the second number y to 1/y, i.e. x / y is x * (1/y).
+//bignumber.js is used for arbitrary-precision arithmetic and solve the floating-point arithmetic problem (e.g. 0.1 + 0.2 = 0.30000000000000004)
 
 (function joesCalculator() {
     "use strict";
@@ -130,19 +132,20 @@
         if (str === "clear") {
             expressionChain = [];
             lastAnswer = null;
-            minusUsed = false;
+            minusUsed = false; //FIXME[]: Might not be needed.
         } else {
             expressionChain.push(parseFloat(strNumber, 10));
             expressionChain.push(str);
             strNumber = "";
             indexOfLastOperator = expressionChain.length - 3;
             indexOfLastOperand = expressionChain.length - 2;
+            console.log(expressionChain); //FIXME[]: Might not be needed.
 
             //x - y also means x + (-y)
             if (expressionChain[indexOfLastOperator] === "minus") {
                 expressionChain[indexOfLastOperator] = "add";
                 expressionChain[indexOfLastOperand] *= -1;
-                minusUsed = false;
+                minusUsed = false; //FIXME[]: Might not be needed.
             }
 
             //x / y also means x * (1/y)
@@ -153,22 +156,24 @@
         }
     }
 
-    //Find final solution based on BEDMAS rule (Brackets, Exponents, Division, Multiplication, Addition, Subtraction).
     //Remember updateExpressionChain converts "minus" to "add" and "divide" to "times".
+    //In essence, arithmetic expressions can be boiled down to simple addition. This function does that.
     //TODO[]: Fix floating point precision error
-    function solveExpChain() {
-        var i;
-        var j;
-        var k;
-        var temp;
+    function findAnswer() {
+        var i; //used for walking the expressionChain array
+        var j; //used for walking a batch of numbers (in the expression chain array) that are multiplying each other
+        var k; //used for walking the product array
+        var l;
+        var temp; //used to hold the running product when multiplying the numbers in the product array
+        var temp2;
+        var temp3;
         var firstOperand = expressionChain[0];
         var firstOperator;
         var secondOperand;
         var secondOperator;
-        var sumChain = [];
-        var productChain = [];
+        var sumChain = []; //Holds the sums of batches of added/subtracted numbers in the expression chain
+        var productChain = []; //Holds the products of batches of multiplied/divided numbers in the expression chain
         var isSimplestCase = expressionChain.length === 4; //e.g. [1, "add", 1, "solve!"];
-        var lastTimesOperatorIndex;
         var product = [];
         var isGeneralCase1;
         var isGeneralCase2;
@@ -179,6 +184,7 @@
             secondOperand = expressionChain[i + 1];
             firstOperator = expressionChain[i];
             secondOperator = expressionChain[i + 2];
+            //Remember [ x - y equals x + (-y) ] and [ x / y equals x * (1/y) ]
             isGeneralCase1 = firstOperator === "add" && (secondOperator === "add" || secondOperator === "solve!") && !isSimplestCase;
             isGeneralCase2 = firstOperator === "add" && (secondOperator === "times" || secondOperator === "solve!") && !isSimplestCase;
             isGeneralCase3 = firstOperator === "times" && (secondOperator === "add" || secondOperator === "solve!") && !isSimplestCase;
@@ -191,11 +197,14 @@
                     productChain = [0];
                 } else {
                     sumChain = [0];
-                    productChain = [firstOperand * secondOperand];
+                    //productChain = [firstOperand * secondOperand];
+                    firstOperand = new BigNumber(firstOperand);
+                    secondOperand = new BigNumber(secondOperand);
+                    productChain = [firstOperand.times(secondOperand)];
                 }
             }
 
-            //General case
+            //General cases
             if (isGeneralCase1) {
                 if (i === 1) {
                     sumChain.push(firstOperand, secondOperand);
@@ -204,11 +213,11 @@
                 }
 
             } else if (isGeneralCase2) {
-
                 if (i === 1) {
                     sumChain.push(firstOperand);
                 }
 
+                //Handle a series of multiplications if needed
                 for (j = i + 2; expressionChain[j] === "times"; j += 2) {
                     if (j === i + 2) {
                         product.push(expressionChain[j - 1], expressionChain[j + 1]);
@@ -219,24 +228,23 @@
 
                 i = j - 2;
 
-                temp = 1;
+                temp = new BigNumber(1);
                 for (k = 0; k < product.length; k += 1) {
-                    temp *= product[k];
+                    //temp *= product[k];
+                    temp = temp.times(product[k]);
                 }
 
                 product = temp;
-
                 productChain.push(product);
                 product = [];
 
-                //FIXME[]: XXX
+                //FIXME[x]: XXX
             } else if (isGeneralCase3) {
-
                 if (i === 1) {
                     product.push(firstOperand, secondOperand);
                 }
 
-
+                //Handle a series of multiplications if needed
                 for (j = i + 2; expressionChain[j] === "times"; j += 2) {
                     if (j === i + 2) {
                         product.push(expressionChain[j - 1], expressionChain[j + 1]);
@@ -247,54 +255,64 @@
 
                 i = j - 2;
 
-                temp = 1;
+                temp = new BigNumber(1);
                 for (k = 0; k < product.length; k += 1) {
-                    temp *= product[k];
+                    //temp *= product[k];
+                    temp = temp.times(product[k]);
                 }
 
                 product = temp;
-
                 productChain.push(product);
                 product = [];
 
             } else if (isGeneralCase4) {
-
                 if (i === 1) {
                     product.push(firstOperand, secondOperand);
                 }
 
-
+                //Handle a series of multiplications if needed
                 for (j = i + 2; expressionChain[j] === "times"; j += 2) {
-
                     product.push(expressionChain[j + 1]);
-
                 }
 
                 i = j - 2;
 
-                temp = 1;
+                temp = new BigNumber(1);
                 for (k = 0; k < product.length; k += 1) {
-                    temp *= product[k];
+                    //temp *= product[k];
+                    temp = temp.times(product[k]);
                 }
 
                 product = temp;
-
                 productChain.push(product);
                 product = [];
 
             }
         }
 
-        console.log("Sumchain is: ", sumChain);
+//        answer = sumChain.reduce(function addAll(a, b) {
+//            return a + b;
+//        }, 0);
 
-        answer = sumChain.reduce(function addAll(a, b) {
-            return a + b;
-        }, 0);
-
-        answer += productChain.reduce(function addAll(a, b) {
-            return a + b;
-        }, 0);
-
+        temp2 = new BigNumber(0);
+        for (l = 0; l < sumChain.length; l += 1) {
+            temp2 = temp2.plus(sumChain[l]);
+        }
+        
+        
+//        answer += productChain.reduce(function addAll(a, b) {
+//            return a + b;
+//        }, 0);
+        
+        temp3 = new BigNumber(0);
+        for (l = 0; l < productChain.length; l += 1) {
+            temp3 = temp3.plus(productChain[l]);
+        }
+        
+        answer = temp2.plus(temp3);
+        answer = answer.toString();
+        //answer = temp3.toString();
+        
     }
 
     $(document).ready(function buttonsHandler() {
@@ -357,7 +375,7 @@
             //Used to chain from last solution.
             var chainingPossible = expressionChain.length === 0 && lastAnswer !== null;
 
-            //Used to prevent divide operator from being applied twice or without operand.
+            //Used to prevent divide operator from being applied twice or without an operand.
             var operatorAllowed = strNumber !== "";
 
             if (chainingPossible) {
@@ -385,7 +403,6 @@
                 updateDisplay(12);
                 updateExpressionChain("times");
             }
-
         });
 
         //Minus button can also turn a number negative.
@@ -445,8 +462,8 @@
 
         $(btns.keyEquals).on("click", function keyEqualsHandler() {
             updateExpressionChain("solve!");
-            minusUsed = false;
-            solveExpChain();
+            minusUsed = false; //FIXME[]: Might not be needed.
+            findAnswer();
             updateDisplay(16);
             lastAnswer = answer;
             expressionChain = [];
