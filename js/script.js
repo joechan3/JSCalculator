@@ -1,13 +1,14 @@
 /*global $, console, BigNumber*/
 /*jslint vars: true */
-//TODO[]: Add a feature where are request for more than one operator in sequence is ignored.
+//TODO[x]: Add a feature where are request for more than one operator in sequence is ignored.
 //This calculator simplifies subtraction by multiplying the second number by -1, i.e. x - y is x + (-y).
 //Likewise division is simplified by converting the second number y to 1/y, i.e. x / y is x * (1/y).
 //bignumber.js is used for arbitrary-precision arithmetic and solve the floating-point arithmetic problem (e.g. 0.1 + 0.2 = 0.30000000000000004)
 
 (function joesCalculator() {
     "use strict";
-
+    
+    //BigNumber.config({ DECIMAL_PLACES: 10 }); //The maximum number of decimal places of the results of operations    
     var answer = 0; //Holds the final total
     var btns = {
         keyClear: "button:eq(1)",
@@ -34,7 +35,8 @@
     var minusUsed = false; //FIXME: MINUSUSED
     var strNumber = ""; //Temporary holder for numbers (as strings) inputted by the user
 
-    //NOTE[]: REVIEWED AND TWEAKED/TIDIED
+
+    //NOTE[x]: REVIEWED AND TWEAKED/TIDIED
     function updateDisplay(btn) {
         var toConcat = ""; //String to concatenate with display.
 
@@ -79,7 +81,7 @@
         case 11.1: //Division button w/ last answer available
             display = "";
             $(".calc-display p").html(display);
-            toConcat = lastAnswer + "&divide;";
+            toConcat = lastAnswer.round(10).toString() + "&divide;";
             break;
         case 12: //Times button
             toConcat = "&times;";
@@ -87,7 +89,7 @@
         case 12.1: //Times button w/ last answer available
             display = "";
             $(".calc-display p").html(display);
-            toConcat = lastAnswer + "&times;";
+            toConcat = lastAnswer.round(10).toString() + "&times;";
             break;
         case 13: //Minus button
             toConcat = "-";
@@ -95,7 +97,7 @@
         case 13.1: //Minus button w/ last answer available
             display = "";
             $(".calc-display p").html(display);
-            toConcat = lastAnswer + "&minus;";
+            toConcat = lastAnswer.round(10).toString() + "&minus;";
             break;
         case 13.2: //Negative button
             toConcat = "-";
@@ -106,7 +108,7 @@
         case 14.1: //Sum button w/ last answer available
             display = "";
             $(".calc-display p").html(display);
-            toConcat = lastAnswer + "&plus;";
+            toConcat = lastAnswer.round(10).toString() + "&plus;";
             break;
         case 15: //Decimal button
             toConcat = ".";
@@ -114,6 +116,8 @@
         case 16: //Equals button
             toConcat = "";
             display = answer;
+            display = display.round(10);
+            display = display.toString();
             break;
         default:
             throw "Invalid input";
@@ -123,11 +127,14 @@
         $(".calc-display p").html(display);
     }
 
-    //NOTE[]: REVIEWED AND TWEAKED/TIDIED
+    //NOTE[x]: REVIEWED AND TWEAKED/TIDIED
     //Triggered by operator type buttons.
     function updateExpressionChain(str) {
+        
         var indexOfLastOperator;
         var indexOfLastOperand;
+        var numerator = new BigNumber(1);
+        var denominator;
 
         if (str === "clear") {
             expressionChain = [];
@@ -151,28 +158,31 @@
             //x / y also means x * (1/y)
             if (expressionChain[indexOfLastOperator] === "divide") {
                 expressionChain[indexOfLastOperator] = "times";
-                expressionChain[indexOfLastOperand] = 1 / expressionChain[indexOfLastOperand];
+                denominator = new BigNumber(expressionChain[indexOfLastOperand]);
+                expressionChain[indexOfLastOperand] = numerator.dividedBy(denominator);
             }
         }
     }
 
-    //Remember updateExpressionChain converts "minus" to "add" and "divide" to "times".
-    //In essence, arithmetic expressions can be boiled down to simple addition. This function does that.
-    //TODO[]: Fix floating point precision error
+    //Reminder: updateExpressionChain converts "minus" to "add" and "divide" to "times".
+    //In essence, arithmetic expressions can be boiled down to simple addition. This function exploits that fact.
+    //TODO[x]: Fix floating point precision error
     function findAnswer() {
+        
+        
         var i; //used for walking the expressionChain array
         var j; //used for walking a batch of numbers (in the expression chain array) that are multiplying each other
         var k; //used for walking the product array
-        var l;
+        var l; //used for walking the sumChainTotal and productChainTotal arrays
         var temp; //used to hold the running product when multiplying the numbers in the product array
-        var temp2;
-        var temp3;
         var firstOperand = expressionChain[0];
         var firstOperator;
         var secondOperand;
         var secondOperator;
         var sumChain = []; //Holds the sums of batches of added/subtracted numbers in the expression chain
+        var sumChainTotal = new BigNumber(0);
         var productChain = []; //Holds the products of batches of multiplied/divided numbers in the expression chain
+        var productChainTotal = new BigNumber(0);
         var isSimplestCase = expressionChain.length === 4; //e.g. [1, "add", 1, "solve!"];
         var product = [];
         var isGeneralCase1;
@@ -197,7 +207,6 @@
                     productChain = [0];
                 } else {
                     sumChain = [0];
-                    //productChain = [firstOperand * secondOperand];
                     firstOperand = new BigNumber(firstOperand);
                     secondOperand = new BigNumber(secondOperand);
                     productChain = [firstOperand.times(secondOperand)];
@@ -230,7 +239,6 @@
 
                 temp = new BigNumber(1);
                 for (k = 0; k < product.length; k += 1) {
-                    //temp *= product[k];
                     temp = temp.times(product[k]);
                 }
 
@@ -257,7 +265,6 @@
 
                 temp = new BigNumber(1);
                 for (k = 0; k < product.length; k += 1) {
-                    //temp *= product[k];
                     temp = temp.times(product[k]);
                 }
 
@@ -279,7 +286,6 @@
 
                 temp = new BigNumber(1);
                 for (k = 0; k < product.length; k += 1) {
-                    //temp *= product[k];
                     temp = temp.times(product[k]);
                 }
 
@@ -290,29 +296,15 @@
             }
         }
 
-//        answer = sumChain.reduce(function addAll(a, b) {
-//            return a + b;
-//        }, 0);
-
-        temp2 = new BigNumber(0);
         for (l = 0; l < sumChain.length; l += 1) {
-            temp2 = temp2.plus(sumChain[l]);
+            sumChainTotal = sumChainTotal.plus(sumChain[l]);
         }
-        
-        
-//        answer += productChain.reduce(function addAll(a, b) {
-//            return a + b;
-//        }, 0);
-        
-        temp3 = new BigNumber(0);
+
         for (l = 0; l < productChain.length; l += 1) {
-            temp3 = temp3.plus(productChain[l]);
+            productChainTotal = productChainTotal.plus(productChain[l]);
         }
-        
-        answer = temp2.plus(temp3);
-        answer = answer.toString();
-        //answer = temp3.toString();
-        
+
+        answer = sumChainTotal.plus(productChainTotal);
     }
 
     $(document).ready(function buttonsHandler() {
@@ -370,7 +362,8 @@
             updateDisplay(10);
             updateExpressionChain("clear");
         });
-
+        
+        //FIXME[x]:Something wrong with division
         $(btns.keyDiv).on("click", function keyDivHandler() {
             //Used to chain from last solution.
             var chainingPossible = expressionChain.length === 0 && lastAnswer !== null;
