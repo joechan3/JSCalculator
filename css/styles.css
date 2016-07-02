@@ -19,6 +19,7 @@
 body {
     background-image: url('../images/escheresque_ste.png');
     background-repeat: repeat;
+    background-color: #3A416A;
 }
 
 h1 {

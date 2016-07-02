@@ -115,9 +115,7 @@
             break;
         case 16: //Equals button
             toConcat = "";
-            display = answer;
-            display = display.round(10);
-            display = display.toString();
+            display = answer.round(10).toString();
             break;
         default:
             throw "Invalid input";
