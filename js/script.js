@@ -5,12 +5,15 @@
 //Likewise division is simplified by converting the second number y to 1/y, i.e. x / y is x * (1/y).
 //bignumber.js is used for arbitrary-precision arithmetic and solve the floating-point arithmetic problem (e.g. 0.1 + 0.2 = 0.30000000000000004)
 
+//TODO[]: Refactor using module pattern. joesCalculator is the module.
+//TODO[]: Number then solve should return the same number
+//TODO[]: Reformat long lines of code
+
 (function joesCalculator() {
     "use strict";
-    
-    //BigNumber.config({ DECIMAL_PLACES: 10 }); //The maximum number of decimal places of the results of operations    
+ 
     var answer = 0; //Holds the final total
-    var btns = {
+    var btns = { //DOM references to calculator buttons.
         keyClear: "button:eq(1)",
         key7: "button:eq(2)",
         key8: "button:eq(3)",
@@ -28,13 +31,11 @@
         key0: "button:eq(15)",
         keyEquals: "button:eq(16)",
         keyPlus: "button:eq(17)"
-    }; //DOM references to calculator buttons.
+    };
     var display = ""; //Holds what is to be displayed to the user.
     var expressionChain = []; //Holds the current chain of numbers and operations inputted by the user
     var lastAnswer = null; //Holds the value of the previous calculation's final solution (when "=" was pressed).
-    var minusUsed = false; //FIXME: MINUSUSED
     var strNumber = ""; //Temporary holder for numbers (as strings) inputted by the user
-
 
     //NOTE[x]: REVIEWED AND TWEAKED/TIDIED
     function updateDisplay(btn) {
@@ -128,16 +129,14 @@
     //NOTE[x]: REVIEWED AND TWEAKED/TIDIED
     //Triggered by operator type buttons.
     function updateExpressionChain(str) {
-        
         var indexOfLastOperator;
         var indexOfLastOperand;
         var numerator = new BigNumber(1);
         var denominator;
-
+        
         if (str === "clear") {
             expressionChain = [];
             lastAnswer = null;
-            minusUsed = false; //FIXME[]: Might not be needed.
         } else {
             expressionChain.push(parseFloat(strNumber, 10));
             expressionChain.push(str);
@@ -150,7 +149,6 @@
             if (expressionChain[indexOfLastOperator] === "minus") {
                 expressionChain[indexOfLastOperator] = "add";
                 expressionChain[indexOfLastOperand] *= -1;
-                minusUsed = false; //FIXME[]: Might not be needed.
             }
 
             //x / y also means x * (1/y)
@@ -166,8 +164,6 @@
     //In essence, arithmetic expressions can be boiled down to simple addition. This function exploits that fact.
     //TODO[x]: Fix floating point precision error
     function findAnswer() {
-        
-        
         var i; //used for walking the expressionChain array
         var j; //used for walking a batch of numbers (in the expression chain array) that are multiplying each other
         var k; //used for walking the product array
@@ -396,33 +392,63 @@
             }
         });
 
+        //FIXME[]: Minus negative functionality
+        //FIXME[]: Fix negative functionality
         //Minus button can also turn a number negative.
         $(btns.keyMinus).on("click", function keyMinusHandler() {
-            var lastChainItem = expressionChain[expressionChain.length - 1];
+            //debugger;
+            var isNegation; //true if minus button turns a number negative
+            var isSubtraction; //true if minus button functions as subtraction
+            var lastItem = expressionChain[expressionChain.length - 1];
+            var operatorAllowed; //true if subtraction or negation is allowed
+            var secondLastItem = expressionChain[expressionChain.length - 2];
+
+            //First OR operand: For negation
+            //Second OR operand: For negation following an operator
+            //Third OR operand: For subtraction
+            if (expressionChain.length === 0
+                    || (isNaN(lastItem) && !isNaN(secondLastItem))
+                    || (strNumber !== "" && !isNaN(strNumber))) {
+                operatorAllowed = true;
+            } else {
+                operatorAllowed = false;
+            }
+
+            isNegation = strNumber === "";
+            
+            if (!isNegation) {
+                isSubtraction = true;
+            }
+            
+            if (operatorAllowed && isSubtraction) {
+                updateDisplay(13);
+                updateExpressionChain("minus");
+            }
+            
+            
+            
+            
+            /*var lastChainItem = expressionChain[expressionChain.length - 1];
 
             //Used to chain from last solution.
             var chainingPossible = expressionChain.length === 0 && lastAnswer !== null;
 
-
-
-            if (!minusUsed && (strNumber !== "" || !isNaN(lastChainItem) || lastAnswer !== null)) {
+            if (strNumber !== "" && !isNaN(lastChainItem) && lastAnswer !== null) {
                 //Allow for chaining previous calculations' solution.
                 if (chainingPossible) {
                     updateDisplay(13.1);
                     expressionChain[0] = lastAnswer;
                     expressionChain[1] = "minus";
-                    minusUsed = true;
                 } else {
+                    //Subtraction
                     updateDisplay(13);
                     updateExpressionChain("minus");
-                    minusUsed = true;
                 }
-            } else if (!minusUsed) {
+            } else {
                 //Turn number negative
                 strNumber += "-";
                 updateDisplay(13.2);
-                minusUsed = true;
-            }
+            }*/
         });
 
         $(btns.keyPlus).on("click", function keyPlusHandler() {
@@ -453,7 +479,7 @@
 
         $(btns.keyEquals).on("click", function keyEqualsHandler() {
             updateExpressionChain("solve!");
-            minusUsed = false; //FIXME[]: Might not be needed.
+            console.log(expressionChain); //FIXME[]: Might not be needed.
             findAnswer();
             updateDisplay(16);
             lastAnswer = answer;
