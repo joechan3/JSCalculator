@@ -7,7 +7,7 @@ GENERAL NOTES
 
 * Division is handled by converting the second number y to 1/y, i.e. x / y is x * (1/y).
 
-* bignumber.js is used for arbitrary-precision arithmetic and solves the floating-point arithmetic 
+* bignumber.js is used for arbitrary-precision arithmetic and solves the floating-point arithmetic
 problem (e.g. 0.1 + 0.2 = 0.30000000000000004).
 
 * User input is stored in the array `expressionChain` and then is evaluated when the `=` button is pressed.
@@ -19,7 +19,7 @@ problem (e.g. 0.1 + 0.2 = 0.30000000000000004).
 
 (function joesCalculator() {
     "use strict";
- 
+
     var answer = 0; //Holds the final total.
     var btns = { //DOM references to calculator buttons.
         keyClear: "button:eq(1)",
@@ -161,14 +161,14 @@ problem (e.g. 0.1 + 0.2 = 0.30000000000000004).
     function transformOperators() {
         var numerator = new BigNumber(1);
         var denominator;
-        
+
         expressionChain.forEach(function transform(element, index) {
             //x - y also means x + (-y)
             if (expressionChain[index] === "minus") {
                 expressionChain[index] = "add";
                 expressionChain[index + 1] *= -1;
             }
-            
+
             //x / y also means x * (1/y)
             if (expressionChain[index] === "divide") {
                 expressionChain[index] = "times";
@@ -177,7 +177,7 @@ problem (e.g. 0.1 + 0.2 = 0.30000000000000004).
             }
         });
     }
-    
+
     //Reminder: transformOperators converts "minus" to "add" and "divide" to "times".
     //Arithmetic expressions can be boiled down to simple addition. This function exploits that fact.
     //E.g. 1 + 2 * 3 - 4 / 5 is 1 + 2 + 2 + 2 + (-1/5) + (-1/5) + (-1/5) + (-1/5)
@@ -215,17 +215,17 @@ problem (e.g. 0.1 + 0.2 = 0.30000000000000004).
             secondOperator = expressionChain[i + 2];
             //Remember [ x - y equals x + (-y) ] and [ x / y equals x * (1/y) ]
             isGeneralCase1 = firstOperator === "add"
-                && (secondOperator === "add" || secondOperator === "solve!")
-                && !isSimplestCase;
+                    && (secondOperator === "add" || secondOperator === "solve!")
+                    && !isSimplestCase;
             isGeneralCase2 = firstOperator === "add"
-                && (secondOperator === "times" || secondOperator === "solve!")
-                && !isSimplestCase;
+                    && (secondOperator === "times" || secondOperator === "solve!")
+                    && !isSimplestCase;
             isGeneralCase3 = firstOperator === "times"
-                && (secondOperator === "add" || secondOperator === "solve!")
-                && !isSimplestCase;
+                    && (secondOperator === "add" || secondOperator === "solve!")
+                    && !isSimplestCase;
             isGeneralCase4 = firstOperator === "times"
-                && (secondOperator === "times" || secondOperator === "solve!")
-                && !isSimplestCase;
+                    && (secondOperator === "times" || secondOperator === "solve!")
+                    && !isSimplestCase;
 
             //Simplest case
             if (isSimplestCase) {
@@ -448,11 +448,11 @@ problem (e.g. 0.1 + 0.2 = 0.30000000000000004).
             }
 
             isNegation = strNumber === "";
-            
+
             if (!isNegation) {
                 isSubtraction = true;
             }
-            
+
             if (chainingPossible) {
                 updateDisplay(13.1);
                 expressionChain[0] = lastAnswer;
@@ -486,7 +486,7 @@ problem (e.g. 0.1 + 0.2 = 0.30000000000000004).
 
         $(btns.keyDecimal).on("click", function keyDecimalHandler() {
             var decimalAllowed = strNumber !== ""
-                && strNumber[strNumber.length - 1] !== ".";
+                    && strNumber[strNumber.length - 1] !== ".";
 
             if (decimalAllowed) {
                 updateDisplay(15);
