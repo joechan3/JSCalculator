@@ -48,6 +48,7 @@ problem (e.g. 0.1 + 0.2 = 0.30000000000000004).
 
     function updateDisplay(btn) {
         var toConcat = ""; //String to concatenate with display.
+        BigNumber.config({ DECIMAL_PLACES: 10 });
 
         switch (btn) {
         case 0:
