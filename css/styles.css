@@ -32,25 +32,29 @@ h1 {
 .calc-body {
     background-color: #3A416A;
     max-width: 300px;
-    min-height: 525px;
+    min-height: 480px;
     margin: 0 auto;
 }
 
 .calc-display {
     background-color: #3A416A;
+    text-align: right;
+    overflow: hidden;
+    max-width: 300px;
+    padding: 13px 10px 13px 10px;
+}
+
+.calc-display .wrapper{
+    float:right;
 }
 
 .calc-display p {
     font-family: 'Source Code Pro', monospace;
     font-size: 1.728em;
     font-weight: 500;
-    padding: 13px 10px 13px 5px;
-    margin-bottom: 0;
     color: #FFF;
-    text-align: right;
-    word-wrap: break-word;
-    max-width: 300px;
-    min-height: 75px;
+    margin-top: 0;
+    margin-bottom: 0;
 }
 
 .calc-keypad {
