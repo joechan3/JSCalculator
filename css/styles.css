@@ -40,6 +40,7 @@ h1 {
     background-color: #3A416A;
     text-align: right;
     overflow: hidden;
+    white-space: nowrap;
     max-width: 300px;
     padding: 13px 10px 13px 10px;
 }
