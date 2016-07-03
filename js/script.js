@@ -1,19 +1,26 @@
 /*global $, console, BigNumber*/
 /*jslint vars: true */
-//TODO[x]: Add a feature where are request for more than one operator in sequence is ignored.
-//This calculator simplifies subtraction by multiplying the second number by -1, i.e. x - y is x + (-y).
-//Likewise division is simplified by converting the second number y to 1/y, i.e. x / y is x * (1/y).
-//bignumber.js is used for arbitrary-precision arithmetic and solve the floating-point arithmetic problem (e.g. 0.1 + 0.2 = 0.30000000000000004)
 
-//TODO[]: Refactor using module pattern. joesCalculator is the module.
-//TODO[x]: Number then solve should return the same number
-//TODO[x]: Reformat long lines of code
-//TODO[]: Look into converting round to truncate
+/******************************************************************************************************
+GENERAL NOTES
+* Subtraction is handled by multiplying the second number by -1 then adding, i.e. x - y is x + (-y).
+
+* Division is handled by converting the second number y to 1/y, i.e. x / y is x * (1/y).
+
+* bignumber.js is used for arbitrary-precision arithmetic and solves the floating-point arithmetic 
+problem (e.g. 0.1 + 0.2 = 0.30000000000000004).
+
+* User input is stored in the array `expressionChain` and then is evaluated when the `=` button is pressed.
+
+* Chaining from the last solution (after pressing `=`) is possible.
+
+* `-` button functions as subtraction or negation depending on conditions.
+******************************************************************************************************/
 
 (function joesCalculator() {
     "use strict";
  
-    var answer = 0; //Holds the final total
+    var answer = 0; //Holds the final total.
     var btns = { //DOM references to calculator buttons.
         keyClear: "button:eq(1)",
         key7: "button:eq(2)",
@@ -34,12 +41,11 @@
         keyPlus: "button:eq(17)"
     };
     var display = ""; //Holds what is to be displayed to the user.
-    var expressionChain = []; //Holds the current chain of numbers and operations inputted by the user
+    var expressionChain = []; //Holds the current chain of numbers and operations inputted by the user.
     var lastAnswer = null; //Holds the value of the previous calculation's final solution (when "=" was pressed).
-    var strNumber = ""; //Temporary holder for numbers (as strings) inputted by the user
+    var strNumber = ""; //Temporary holder for numbers (as strings) inputted by the user.
     var negationUsed = false;
 
-    //NOTE[x]: REVIEWED AND TWEAKED/TIDIED
     function updateDisplay(btn) {
         var toConcat = ""; //String to concatenate with display.
 
@@ -128,7 +134,6 @@
         $(".calc-display p").html(display);
     }
 
-    //NOTE[x]: REVIEWED AND TWEAKED/TIDIED
     //Triggered by operator type buttons.
     function updateExpressionChain(str) {
         var indexOfLastOperator;
@@ -174,8 +179,8 @@
     }
     
     //Reminder: transformOperators converts "minus" to "add" and "divide" to "times".
-    //In essence, arithmetic expressions can be boiled down to simple addition. This function exploits that fact.
-    //TODO[x]: Fix floating point precision error
+    //Arithmetic expressions can be boiled down to simple addition. This function exploits that fact.
+    //E.g. 1 + 2 * 3 - 4 / 5 is 1 + 2 + 2 + 2 + (-1/5) + (-1/5) + (-1/5) + (-1/5)
     function findAnswer() {
         var i; //used for walking the expressionChain array
         var j; //used for walking a batch of numbers (in the expression chain array) that are multiplying each other
@@ -187,15 +192,15 @@
         var secondOperand;
         var secondOperator;
         var sumChain = []; //Holds the sums of batches of added/subtracted numbers in the expression chain
-        var sumChainTotal = new BigNumber(0);
+        var sumChainTotal = new BigNumber(0); //Will hold the ultimate sum of the items in sumChain
         var productChain = []; //Holds the products of batches of multiplied/divided numbers in the expression chain
-        var productChainTotal = new BigNumber(0);
+        var productChainTotal = new BigNumber(0); //Will hold the ultimate sum of the items in productChain
         var isSimplestCase = expressionChain.length === 4; //e.g. [1, "add", 1, "solve!"];
-        var product = [];
-        var isGeneralCase1;
-        var isGeneralCase2;
-        var isGeneralCase3;
-        var isGeneralCase4;
+        var product = []; //Temporarily holds the product of a batch of multiplied/divided numbers in the expression chain
+        var isGeneralCase1; //defined in main for loop below
+        var isGeneralCase2; //defined in main for loop below
+        var isGeneralCase3; //defined in main for loop below
+        var isGeneralCase4; //defined in main for loop below
 
         //For cases where user enters a number then presses `=` button, e.g. [5, "solve!"]
         if (expressionChain.length === 2
@@ -242,7 +247,6 @@
                 } else {
                     sumChain.push(secondOperand);
                 }
-
             } else if (isGeneralCase2) {
                 if (i === 1) {
                     sumChain.push(firstOperand);
@@ -268,7 +272,6 @@
                 productChain.push(product);
                 product = [];
 
-                //FIXME[x]: XXX
             } else if (isGeneralCase3) {
                 if (i === 1) {
                     product.push(firstOperand, secondOperand);
@@ -384,8 +387,7 @@
             updateDisplay(10);
             updateExpressionChain("clear");
         });
-        
-        //FIXME[x]:Something wrong with division
+
         $(btns.keyDiv).on("click", function keyDivHandler() {
             //Used to chain from last solution.
             var chainingPossible = expressionChain.length === 0 && lastAnswer !== null;
@@ -420,11 +422,7 @@
             }
         });
 
-        //FIXME[x]: Minus negative functionality
-        //FIXME[x]: Fix negative functionality
-        //FIXME[x]: Can do double -- at the start
-        //TODO[x]: Last answer functionality
-        //Minus button can also turn a number negative.
+        //Minus button functions as subtraction or negation.
         $(btns.keyMinus).on("click", function keyMinusHandler() {
             var isNegation; //true if minus button turns a number negative
             var isSubtraction; //true if minus button functions as subtraction
@@ -438,7 +436,7 @@
 
             //First OR operand: For negation
             //Second OR operand: For negation following an operator
-            //Third OR operand: To prevent too many operators
+            //Third OR operand: To prevent too many `-` operators
             //Fourth OR operand: For subtraction
             if ((expressionChain.length === 0 && strNumber === "")
                     || (isNaN(lastItem) && !isNaN(secondLastItem))
@@ -498,9 +496,7 @@
 
         $(btns.keyEquals).on("click", function keyEqualsHandler() {
             updateExpressionChain("solve!");
-            console.log("Before transform: " + expressionChain); //FIXME[]: Might not be needed.
             transformOperators();
-            console.log("After transform: " + expressionChain); //FIXME[]: Might not be needed.
             findAnswer();
             updateDisplay(16);
             lastAnswer = answer;
