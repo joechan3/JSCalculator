@@ -6,8 +6,8 @@
 //bignumber.js is used for arbitrary-precision arithmetic and solve the floating-point arithmetic problem (e.g. 0.1 + 0.2 = 0.30000000000000004)
 
 //TODO[]: Refactor using module pattern. joesCalculator is the module.
-//TODO[]: Number then solve should return the same number
-//TODO[]: Reformat long lines of code
+//TODO[x]: Number then solve should return the same number
+//TODO[x]: Reformat long lines of code
 //TODO[]: Look into converting round to truncate
 
 (function joesCalculator() {
@@ -132,12 +132,8 @@
     //Triggered by operator type buttons.
     function updateExpressionChain(str) {
         var indexOfLastOperator;
-        var indexOfLastOperand;
-        var numerator = new BigNumber(1);
-        var denominator;
 
         if (str === "negation") {
-            
             indexOfLastOperator = expressionChain.length - 1;
             if (expressionChain[indexOfLastOperator] === "divide") {
                 expressionChain.pop();
@@ -145,16 +141,6 @@
             } else {
                 expressionChain.push(-1, "times");
             }
-            
-            /*indexOfLastOperator = expressionChain.length - 1;
-            if (expressionChain[indexOfLastOperator] === "minus") {
-                expressionChain[indexOfLastOperator] = "add";
-            } else if (expressionChain[indexOfLastOperator] === "divide") {
-                
-            } else {
-                expressionChain.push(-1, "times");
-            }*/
-            
         } else if (str === "clear") {
             expressionChain = [];
             lastAnswer = null;
@@ -163,30 +149,14 @@
             expressionChain.push(parseFloat(strNumber, 10));
             expressionChain.push(str);
             strNumber = "";
-            indexOfLastOperator = expressionChain.length - 3;
-            indexOfLastOperand = expressionChain.length - 2;
             negationUsed = false;
-            console.log(expressionChain); //FIXME[]: Might not be needed.
-
-            /*//x - y also means x + (-y)
-            if (expressionChain[indexOfLastOperator] === "minus") {
-                
-                expressionChain[indexOfLastOperator] = "add";
-                expressionChain[indexOfLastOperand] *= -1;
-            }
-
-            //x / y also means x * (1/y)
-            if (expressionChain[indexOfLastOperator] === "divide") {
-                expressionChain[indexOfLastOperator] = "times";
-                denominator = new BigNumber(expressionChain[indexOfLastOperand]);
-                expressionChain[indexOfLastOperand] = numerator.dividedBy(denominator);
-            }*/
         }
     }
 
     function transformOperators() {
         var numerator = new BigNumber(1);
         var denominator;
+        
         expressionChain.forEach(function transform(element, index) {
             //x - y also means x + (-y)
             if (expressionChain[index] === "minus") {
@@ -201,10 +171,9 @@
                 expressionChain[index + 1] = numerator.dividedBy(denominator);
             }
         });
-        
     }
     
-    //Reminder: updateExpressionChain converts "minus" to "add" and "divide" to "times".
+    //Reminder: transformOperators converts "minus" to "add" and "divide" to "times".
     //In essence, arithmetic expressions can be boiled down to simple addition. This function exploits that fact.
     //TODO[x]: Fix floating point precision error
     function findAnswer() {
@@ -228,15 +197,30 @@
         var isGeneralCase3;
         var isGeneralCase4;
 
+        //For cases where user enters a number then presses `=` button, e.g. [5, "solve!"]
+        if (expressionChain.length === 2
+                && !isNaN(expressionChain[0])) {
+            sumChain.push(firstOperand);
+            productChain = [0];
+        }
+
         for (i = 1; (i + 2) <= expressionChain.length - 1; i += 2) {
             secondOperand = expressionChain[i + 1];
             firstOperator = expressionChain[i];
             secondOperator = expressionChain[i + 2];
             //Remember [ x - y equals x + (-y) ] and [ x / y equals x * (1/y) ]
-            isGeneralCase1 = firstOperator === "add" && (secondOperator === "add" || secondOperator === "solve!") && !isSimplestCase;
-            isGeneralCase2 = firstOperator === "add" && (secondOperator === "times" || secondOperator === "solve!") && !isSimplestCase;
-            isGeneralCase3 = firstOperator === "times" && (secondOperator === "add" || secondOperator === "solve!") && !isSimplestCase;
-            isGeneralCase4 = firstOperator === "times" && (secondOperator === "times" || secondOperator === "solve!") && !isSimplestCase;
+            isGeneralCase1 = firstOperator === "add"
+                && (secondOperator === "add" || secondOperator === "solve!")
+                && !isSimplestCase;
+            isGeneralCase2 = firstOperator === "add"
+                && (secondOperator === "times" || secondOperator === "solve!")
+                && !isSimplestCase;
+            isGeneralCase3 = firstOperator === "times"
+                && (secondOperator === "add" || secondOperator === "solve!")
+                && !isSimplestCase;
+            isGeneralCase4 = firstOperator === "times"
+                && (secondOperator === "times" || secondOperator === "solve!")
+                && !isSimplestCase;
 
             //Simplest case
             if (isSimplestCase) {
@@ -436,12 +420,12 @@
             }
         });
 
-        //FIXME[]: Minus negative functionality
-        //FIXME[]: Fix negative functionality
-        //TODO[]: Last answer functionality
+        //FIXME[x]: Minus negative functionality
+        //FIXME[x]: Fix negative functionality
+        //FIXME[x]: Can do double -- at the start
+        //TODO[x]: Last answer functionality
         //Minus button can also turn a number negative.
         $(btns.keyMinus).on("click", function keyMinusHandler() {
-            //debugger;
             var isNegation; //true if minus button turns a number negative
             var isSubtraction; //true if minus button functions as subtraction
             var lastItem = expressionChain[expressionChain.length - 1];
@@ -449,7 +433,8 @@
             var operatorAllowed; //true if subtraction or negation is allowed
             var secondLastItem = expressionChain[expressionChain.length - 2];
             var secondLastItemStr = strNumber[strNumber.length - 2];
-            
+            var chainingPossible = expressionChain.length === 0
+                    && lastAnswer !== null; //Used to chain from last solution.
 
             //First OR operand: For negation
             //Second OR operand: For negation following an operator
@@ -470,42 +455,18 @@
                 isSubtraction = true;
             }
             
-            if (operatorAllowed && isSubtraction) {
+            if (chainingPossible) {
+                updateDisplay(13.1);
+                expressionChain[0] = lastAnswer;
+                expressionChain[1] = "minus";
+            } else if (operatorAllowed && isSubtraction) {
                 updateDisplay(13);
-                //debugger;
                 updateExpressionChain("minus");
-            }
-            
-            if (operatorAllowed && isNegation && !negationUsed) {
+            } else if (operatorAllowed && isNegation && !negationUsed) {
                 negationUsed = true;
                 updateDisplay(13.2);
                 updateExpressionChain("negation");
             }
-            
-            
-            
-            
-            /*var lastChainItem = expressionChain[expressionChain.length - 1];
-
-            //Used to chain from last solution.
-            var chainingPossible = expressionChain.length === 0 && lastAnswer !== null;
-
-            if (strNumber !== "" && !isNaN(lastChainItem) && lastAnswer !== null) {
-                //Allow for chaining previous calculations' solution.
-                if (chainingPossible) {
-                    updateDisplay(13.1);
-                    expressionChain[0] = lastAnswer;
-                    expressionChain[1] = "minus";
-                } else {
-                    //Subtraction
-                    updateDisplay(13);
-                    updateExpressionChain("minus");
-                }
-            } else {
-                //Turn number negative
-                strNumber += "-";
-                updateDisplay(13.2);
-            }*/
         });
 
         $(btns.keyPlus).on("click", function keyPlusHandler() {
@@ -526,7 +487,8 @@
         });
 
         $(btns.keyDecimal).on("click", function keyDecimalHandler() {
-            var decimalAllowed = strNumber !== "" && strNumber[strNumber.length - 1] !== ".";
+            var decimalAllowed = strNumber !== ""
+                && strNumber[strNumber.length - 1] !== ".";
 
             if (decimalAllowed) {
                 updateDisplay(15);
@@ -535,7 +497,6 @@
         });
 
         $(btns.keyEquals).on("click", function keyEqualsHandler() {
-            
             updateExpressionChain("solve!");
             console.log("Before transform: " + expressionChain); //FIXME[]: Might not be needed.
             transformOperators();
