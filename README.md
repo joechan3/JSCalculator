@@ -25,3 +25,4 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 * [bignumber.js - A JavaScript library for arbitrary-precision arithmetic.](http://mikemcl.github.io/bignumber.js/)
 * [Design UI - Calculator by Andrew Golev](https://www.behance.net/gallery/33307411/Design-UI-Calculator)
 * [Android Calculator UI](http://imgur.com/7qPESW3)
+* [okpc-okpc for beta testing help](@okpc-okpc)
