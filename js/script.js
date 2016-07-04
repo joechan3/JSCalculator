@@ -333,10 +333,23 @@ problem (e.g. 0.1 + 0.2 = 0.30000000000000004).
         answer = sumChainTotal.plus(productChainTotal);
     }
 
+    //FIXME[]: when you got result after calculation and try to enter a digit - digit just append to the result on the screen
     $(document).ready(function buttonsHandler() {
+        //TODO[]: multiple initial 0s shouldn't render on the screen
         $(btns.key0).on("click", function key0Handler() {
-            updateDisplay(0);
-            strNumber += "0";
+            var zeroAllowed = false;
+            
+            if (strNumber === ""
+                    || (strNumber !== "" && strNumber[0] !== "0")
+                    || (strNumber !== "" && (strNumber[0] === "0" && strNumber[1] === "."))) {
+                zeroAllowed = true;
+            }
+            
+            if (zeroAllowed) {
+                updateDisplay(0);
+                strNumber += "0";
+            }
+            
         });
 
         $(btns.key1).on("click", function key1Handler() {
@@ -485,7 +498,9 @@ problem (e.g. 0.1 + 0.2 = 0.30000000000000004).
             }
         });
 
+        //FIXME[]: Pressing clear then decimal, decimal doesn't show up
         $(btns.keyDecimal).on("click", function keyDecimalHandler() {
+            //debugger;
             var decimalAllowed = false;
             
             //Prevent multiple uses of decimal at a time
