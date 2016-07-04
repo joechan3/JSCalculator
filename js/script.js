@@ -45,6 +45,7 @@ problem (e.g. 0.1 + 0.2 = 0.30000000000000004).
     var lastAnswer = null; //Holds the value of the previous calculation's final solution (when "=" was pressed).
     var strNumber = ""; //Temporary holder for numbers (as strings) inputted by the user.
     var negationUsed = false;
+    var unnecessaryZero = false;
 
     function updateDisplay(btn) {
         var toConcat = ""; //String to concatenate with display.
@@ -177,6 +178,26 @@ problem (e.g. 0.1 + 0.2 = 0.30000000000000004).
                 expressionChain[index + 1] = numerator.dividedBy(denominator);
             }
         });
+    }
+    
+    function checkUnnecessaryZero() {
+        if (strNumber !== ""
+                && (strNumber[0] === "0" && strNumber[1] !== ".")) {
+            unnecessaryZero = true;
+        }
+    }
+    
+    function removeUnnecessaryZero() {
+        var zeroIndex = display.lastIndexOf("0");
+        
+        if (zeroIndex === 0) {
+            display = display.substring(1);
+        } else {
+            display = display.substring(0, zeroIndex) + display.substring(zeroIndex + 1);
+        }
+        
+        strNumber = strNumber.substring(1);
+        unnecessaryZero = false;
     }
 
     //Reminder: transformOperators converts "minus" to "add" and "divide" to "times".
@@ -335,7 +356,6 @@ problem (e.g. 0.1 + 0.2 = 0.30000000000000004).
 
     //FIXME[]: when you got result after calculation and try to enter a digit - digit just append to the result on the screen
     $(document).ready(function buttonsHandler() {
-        //TODO[]: multiple initial 0s shouldn't render on the screen
         $(btns.key0).on("click", function key0Handler() {
             var zeroAllowed = false;
             
@@ -353,46 +373,100 @@ problem (e.g. 0.1 + 0.2 = 0.30000000000000004).
         });
 
         $(btns.key1).on("click", function key1Handler() {
+            checkUnnecessaryZero();
+            
+            if (unnecessaryZero) {
+                removeUnnecessaryZero();
+            }
+            
             updateDisplay(1);
             strNumber += "1";
         });
 
         $(btns.key2).on("click", function key2Handler() {
+            checkUnnecessaryZero();
+            
+            if (unnecessaryZero) {
+                removeUnnecessaryZero();
+            }
+            
             updateDisplay(2);
             strNumber += "2";
         });
 
         $(btns.key3).on("click", function key3Handler() {
+            checkUnnecessaryZero();
+            
+            if (unnecessaryZero) {
+                removeUnnecessaryZero();
+            }
+            
             updateDisplay(3);
             strNumber += "3";
         });
 
         $(btns.key4).on("click", function key4Handler() {
+            checkUnnecessaryZero();
+            
+            if (unnecessaryZero) {
+                removeUnnecessaryZero();
+            }
+            
             updateDisplay(4);
             strNumber += "4";
         });
 
         $(btns.key5).on("click", function key5Handler() {
+            checkUnnecessaryZero();
+            
+            if (unnecessaryZero) {
+                removeUnnecessaryZero();
+            }
+            
             updateDisplay(5);
             strNumber += "5";
         });
 
         $(btns.key6).on("click", function key6Handler() {
+            checkUnnecessaryZero();
+            
+            if (unnecessaryZero) {
+                removeUnnecessaryZero();
+            }
+            
             updateDisplay(6);
             strNumber += "6";
         });
 
         $(btns.key7).on("click", function key7Handler() {
+            checkUnnecessaryZero();
+            
+            if (unnecessaryZero) {
+                removeUnnecessaryZero();
+            }
+            
             updateDisplay(7);
             strNumber += "7";
         });
 
         $(btns.key8).on("click", function key8Handler() {
+            checkUnnecessaryZero();
+            
+            if (unnecessaryZero) {
+                removeUnnecessaryZero();
+            }
+            
             updateDisplay(8);
             strNumber += "8";
         });
 
         $(btns.key9).on("click", function key9Handler() {
+            checkUnnecessaryZero();
+            
+            if (unnecessaryZero) {
+                removeUnnecessaryZero();
+            }
+            
             updateDisplay(9);
             strNumber += "9";
         });
