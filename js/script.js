@@ -38,7 +38,9 @@ problem (e.g. 0.1 + 0.2 = 0.30000000000000004).
         keyDecimal: "button:eq(14)",
         key0: "button:eq(15)",
         keyEquals: "button:eq(16)",
-        keyPlus: "button:eq(17)"
+        keyPlus: "button:eq(17)",
+        keyNumber: ".key-number",
+        keyNumberNotZero: ".key-number:not(.key-zero)"
     };
     var display = ""; //Holds what is to be displayed to the user.
     var expressionChain = []; //Holds the current chain of numbers and operations inputted by the user.
@@ -356,6 +358,20 @@ problem (e.g. 0.1 + 0.2 = 0.30000000000000004).
 
     //FIXME[]: when you got result after calculation and try to enter a digit - digit just append to the result on the screen
     $(document).ready(function buttonsHandler() {
+        
+        $(btns.keyNumber).on("click", function keyNumberHandler() {
+            //Reset calculator if user immediately enters a number after last calculation
+            if (lastAnswer !== null && expressionChain.length === 0) {
+                lastAnswer = null;
+            }
+            
+        });
+        
+        $(btns.keyNumberNotZero).on("click", function keyNumberNotZeroHandler() {
+            alert("Boo");
+            
+        });
+        
         $(btns.key0).on("click", function key0Handler() {
             var zeroAllowed = false;
             
@@ -572,7 +588,6 @@ problem (e.g. 0.1 + 0.2 = 0.30000000000000004).
             }
         });
 
-        //FIXME[]: Pressing clear then decimal, decimal doesn't show up
         $(btns.keyDecimal).on("click", function keyDecimalHandler() {
             //debugger;
             var decimalAllowed = false;
@@ -601,6 +616,7 @@ problem (e.g. 0.1 + 0.2 = 0.30000000000000004).
             updateDisplay(16);
             lastAnswer = answer;
             expressionChain = [];
+            display = "";
             answer = 0;
         });
 
