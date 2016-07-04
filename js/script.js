@@ -368,7 +368,7 @@ problem (e.g. 0.1 + 0.2 = 0.30000000000000004).
         });
         
         $(btns.keyNumberNotZero).on("click", function keyNumberNotZeroHandler() {
-            alert("Boo");
+            //alert("Boo");
             
         });
         
