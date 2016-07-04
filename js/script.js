@@ -485,10 +485,15 @@ problem (e.g. 0.1 + 0.2 = 0.30000000000000004).
             }
         });
 
-        //TODO[]: when I press '.' as first symbol I expect '0.'
         $(btns.keyDecimal).on("click", function keyDecimalHandler() {
-            var decimalAllowed = strNumber[strNumber.length - 1] !== ".";
+            var decimalAllowed = false;
+            
+            //Prevent multiple uses of decimal at a time
+            if (strNumber.indexOf('.') === -1) {
+                decimalAllowed = true;
+            }
 
+            //Insert a '0' if decimal is the first user input
             if (strNumber === "" && decimalAllowed) {
                 updateDisplay(0);
                 strNumber += "0";
