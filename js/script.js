@@ -184,14 +184,14 @@ problem (e.g. 0.1 + 0.2 = 0.30000000000000004).
         });
     }
     
+    //Example of unnecessary zero is 02.
     function checkUnnecessaryZero() {
         if (strNumber !== ""
                 && (strNumber[0] === "0" && strNumber[1] !== ".")) {
             unnecessaryZero = true;
         }
     }
-    
-    //Example of unnecessary zero is 02.
+        
     function removeUnnecessaryZero() {
         var zeroIndex = display.lastIndexOf("0");
         
@@ -230,9 +230,13 @@ problem (e.g. 0.1 + 0.2 = 0.30000000000000004).
         var isGeneralCase4; //defined in main for loop below
 
         //For cases where user enters a number then presses `=` button, e.g. [5, "solve!"]
+        //FIXME[]: but when I press "=" second time I got 0
         if (expressionChain.length === 2
                 && !isNaN(expressionChain[0])) {
             sumChain.push(firstOperand);
+            productChain = [0];
+        } else if (expressionChain.length === 0 && lastAnswer !== null) {
+            sumChain.push(lastAnswer);
             productChain = [0];
         }
 
@@ -374,7 +378,6 @@ problem (e.g. 0.1 + 0.2 = 0.30000000000000004).
             if (unnecessaryZero) {
                 removeUnnecessaryZero();
             }
-            
         });
         
         $(btns.key0).on("click", function key0Handler() {
@@ -561,21 +564,24 @@ problem (e.g. 0.1 + 0.2 = 0.30000000000000004).
             }
         });
 
-        //TODO[]: when I press '=' after calculation I expect that last operation will repeat. 1+2=3, =5, =7, =9
         $(btns.keyEquals).on("click", function keyEqualsHandler() {
             
-            //Repeat last operation when requested by user
+            //Repeat last operation when requested by user (e.g. 1+2=3, =5, =7, =9)
+            //FIXME[]: Problem when you have 5--6
             if (lastAnswer !== null && expressionChain.length === 0) {
-                expressionChain[0] =  lastAnswer;
-                expressionChain[1] = lastOperator;
-                expressionChain[2] = lastOperand;
-                expressionChain[3] = "solve!";
+                if (lastOperator !== undefined) {
+                    expressionChain[0] =  lastAnswer;
+                    expressionChain[1] = lastOperator;
+                    expressionChain[2] = lastOperand;
+                    expressionChain[3] = "solve!";
+                }
             } else {
                 updateExpressionChain("solve!");
             }
 
             lastOperand = expressionChain[expressionChain.length - 2];
             lastOperator = expressionChain[expressionChain.length - 3];
+            console.log("Last operator is: " + lastOperator);
             transformOperators();
             findAnswer();
             updateDisplay(16);
@@ -586,6 +592,7 @@ problem (e.g. 0.1 + 0.2 = 0.30000000000000004).
             expressionChain = [];
             display = "";
             answer = 0;
+            console.log("Expression chain after clearing: " + expressionChain);
         });
 
     });
