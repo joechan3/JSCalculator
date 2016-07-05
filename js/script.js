@@ -45,6 +45,8 @@ problem (e.g. 0.1 + 0.2 = 0.30000000000000004).
     var display = ""; //Holds what is to be displayed to the user.
     var expressionChain = []; //Holds the current chain of numbers and operations inputted by the user.
     var lastAnswer = null; //Holds the value of the previous calculation's final solution (when "=" was pressed).
+    var lastOperator;
+    var lastOperand;
     var strNumber = ""; //Temporary holder for numbers (as strings) inputted by the user.
     var negationUsed = false;
     var unnecessaryZero = false;
@@ -189,6 +191,7 @@ problem (e.g. 0.1 + 0.2 = 0.30000000000000004).
         }
     }
     
+    //Example of unnecessary zero is 02.
     function removeUnnecessaryZero() {
         var zeroIndex = display.lastIndexOf("0");
         
@@ -356,7 +359,6 @@ problem (e.g. 0.1 + 0.2 = 0.30000000000000004).
         answer = sumChainTotal.plus(productChainTotal);
     }
 
-    //FIXME[]: when you got result after calculation and try to enter a digit - digit just append to the result on the screen
     $(document).ready(function buttonsHandler() {
         
         $(btns.keyNumber).on("click", function keyNumberHandler() {
@@ -439,6 +441,7 @@ problem (e.g. 0.1 + 0.2 = 0.30000000000000004).
         $(btns.keyClear).on("click", function keyClearHandler() {
             updateDisplay(10);
             updateExpressionChain("clear");
+            //TODO: lastanswer = null here? without it, random errors happen?
         });
 
         $(btns.keyDiv).on("click", function keyDivHandler() {
@@ -558,12 +561,28 @@ problem (e.g. 0.1 + 0.2 = 0.30000000000000004).
             }
         });
 
+        //TODO[]: when I press '=' after calculation I expect that last operation will repeat. 1+2=3, =5, =7, =9
         $(btns.keyEquals).on("click", function keyEqualsHandler() {
-            updateExpressionChain("solve!");
+            
+            //Repeat last operation when requested by user
+            if (lastAnswer !== null && expressionChain.length === 0) {
+                expressionChain[0] =  lastAnswer;
+                expressionChain[1] = lastOperator;
+                expressionChain[2] = lastOperand;
+                expressionChain[3] = "solve!";
+            } else {
+                updateExpressionChain("solve!");
+            }
+
+            lastOperand = expressionChain[expressionChain.length - 2];
+            lastOperator = expressionChain[expressionChain.length - 3];
             transformOperators();
             findAnswer();
             updateDisplay(16);
             lastAnswer = answer;
+            console.log("Expression chain before clearing: " + expressionChain);
+            
+            //Reset
             expressionChain = [];
             display = "";
             answer = 0;
