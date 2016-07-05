@@ -368,7 +368,10 @@ problem (e.g. 0.1 + 0.2 = 0.30000000000000004).
         });
         
         $(btns.keyNumberNotZero).on("click", function keyNumberNotZeroHandler() {
-            //alert("Boo");
+            checkUnnecessaryZero();
+            if (unnecessaryZero) {
+                removeUnnecessaryZero();
+            }
             
         });
         
@@ -389,100 +392,46 @@ problem (e.g. 0.1 + 0.2 = 0.30000000000000004).
         });
 
         $(btns.key1).on("click", function key1Handler() {
-            checkUnnecessaryZero();
-            
-            if (unnecessaryZero) {
-                removeUnnecessaryZero();
-            }
-            
             updateDisplay(1);
             strNumber += "1";
         });
 
         $(btns.key2).on("click", function key2Handler() {
-            checkUnnecessaryZero();
-            
-            if (unnecessaryZero) {
-                removeUnnecessaryZero();
-            }
-            
             updateDisplay(2);
             strNumber += "2";
         });
 
         $(btns.key3).on("click", function key3Handler() {
-            checkUnnecessaryZero();
-            
-            if (unnecessaryZero) {
-                removeUnnecessaryZero();
-            }
-            
             updateDisplay(3);
             strNumber += "3";
         });
 
         $(btns.key4).on("click", function key4Handler() {
-            checkUnnecessaryZero();
-            
-            if (unnecessaryZero) {
-                removeUnnecessaryZero();
-            }
-            
             updateDisplay(4);
             strNumber += "4";
         });
 
         $(btns.key5).on("click", function key5Handler() {
-            checkUnnecessaryZero();
-            
-            if (unnecessaryZero) {
-                removeUnnecessaryZero();
-            }
-            
             updateDisplay(5);
             strNumber += "5";
         });
 
         $(btns.key6).on("click", function key6Handler() {
-            checkUnnecessaryZero();
-            
-            if (unnecessaryZero) {
-                removeUnnecessaryZero();
-            }
-            
             updateDisplay(6);
             strNumber += "6";
         });
 
         $(btns.key7).on("click", function key7Handler() {
-            checkUnnecessaryZero();
-            
-            if (unnecessaryZero) {
-                removeUnnecessaryZero();
-            }
-            
             updateDisplay(7);
             strNumber += "7";
         });
 
         $(btns.key8).on("click", function key8Handler() {
-            checkUnnecessaryZero();
-            
-            if (unnecessaryZero) {
-                removeUnnecessaryZero();
-            }
-            
             updateDisplay(8);
             strNumber += "8";
         });
 
         $(btns.key9).on("click", function key9Handler() {
-            checkUnnecessaryZero();
-            
-            if (unnecessaryZero) {
-                removeUnnecessaryZero();
-            }
-            
             updateDisplay(9);
             strNumber += "9";
         });
