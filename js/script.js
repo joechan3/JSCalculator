@@ -1,4 +1,4 @@
-/*global $, console, BigNumber*/
+/*global $, console, BigNumber, math*/
 /*jslint vars: true */
 
 /******************************************************************************************************
@@ -63,7 +63,6 @@ problem (e.g. 0.1 + 0.2 = 0.30000000000000004, 0.1 * 0.2 = 0.020000000000000004,
     var lastOperator;
     var lastOperand;
     var strNumber = ""; //Temporary holder for numbers (as strings) inputted by the user.
-    var negationUsed = false;
     var unnecessaryZero = false;
 
     function updateDisplay(btn) {
@@ -146,7 +145,7 @@ problem (e.g. 0.1 + 0.2 = 0.30000000000000004, 0.1 * 0.2 = 0.020000000000000004,
             break;
         case 16: //Equals button
             toConcat = "";
-            display = answer.toDigits(14).toString();
+            display = answer.toString();
             break;
         default:
             throw "Invalid input";
@@ -160,45 +159,17 @@ problem (e.g. 0.1 + 0.2 = 0.30000000000000004, 0.1 * 0.2 = 0.020000000000000004,
     function updateExpressionChain(str) {
         var indexOfLastOperator;
 
-        if (str === "negation") {
-            indexOfLastOperator = expressionChain.length - 1;
-            if (expressionChain[indexOfLastOperator] === "divide") {
-                expressionChain.pop();
-                expressionChain.push("times", -1, "divide");
-            } else {
-                expressionChain.push(-1, "times");
-            }
-        } else if (str === "clear") {
+        if (str === "clear") {
             expressionChain = [];
             lastAnswer = null;
-            negationUsed = false;
         } else {
             expressionChain.push(parseFloat(strNumber, 10));
-            expressionChain.push(str);
+            
+            if (str !== "solve!") {
+                expressionChain.push(str);
+            }
             strNumber = "";
-            negationUsed = false;
         }
-    }
-
-    //Convert "minus" to "add" and "divide" to "times".
-    function transformOperators() {
-        var numerator = new BigNumber(1);
-        var denominator;
-
-        expressionChain.forEach(function transform(element, index) {
-            //x - y also means x + (-y)
-            if (expressionChain[index] === "minus") {
-                expressionChain[index] = "add";
-                expressionChain[index + 1] *= -1;
-            }
-
-            //x / y also means x * (1/y)
-            if (expressionChain[index] === "divide") {
-                expressionChain[index] = "times";
-                denominator = new BigNumber(expressionChain[index + 1]);
-                expressionChain[index + 1] = numerator.dividedBy(denominator);
-            }
-        });
     }
 
     //Example of unnecessary zero is 02.
@@ -222,10 +193,225 @@ problem (e.g. 0.1 + 0.2 = 0.30000000000000004, 0.1 * 0.2 = 0.020000000000000004,
         unnecessaryZero = false;
     }
 
-    //Reminder: transformOperators converts "minus" to "add" and "divide" to "times".
+    function findAnswer() {
+        math.config({
+            number: 'BigNumber',
+            precision: 64
+        });
+        answer = math.eval(expressionChain.join(""));
+    }
+
+    $(document).ready(function buttonsHandler() {
+        
+        $(btns.keyNumber).on("click", function keyNumberHandler() {
+            //Reset calculator if user immediately enters a number after last calculation
+            if (lastAnswer !== null && expressionChain.length === 0) {
+                lastAnswer = null;
+            }
+        });
+        
+        $(btns.keyNumberNotZero).on("click", function keyNumberNotZeroHandler() {
+            checkUnnecessaryZero();
+            if (unnecessaryZero) {
+                removeUnnecessaryZero();
+            }
+        });
+        
+        $(btns.key0).on("click", function key0Handler() {
+            var zeroAllowed = false;
+            
+            if (strNumber === ""
+                    || (strNumber !== "" && strNumber[0] !== "0")
+                    || (strNumber !== "" && (strNumber[0] === "0" && strNumber[1] === "."))) {
+                zeroAllowed = true;
+            }
+            
+            if (zeroAllowed) {
+                updateDisplay(0);
+                strNumber += "0";
+            }
+            
+        });
+
+        $(btns.key1).on("click", function key1Handler() {
+            updateDisplay(1);
+            strNumber += "1";
+        });
+
+        $(btns.key2).on("click", function key2Handler() {
+            updateDisplay(2);
+            strNumber += "2";
+        });
+
+        $(btns.key3).on("click", function key3Handler() {
+            updateDisplay(3);
+            strNumber += "3";
+        });
+
+        $(btns.key4).on("click", function key4Handler() {
+            updateDisplay(4);
+            strNumber += "4";
+        });
+
+        $(btns.key5).on("click", function key5Handler() {
+            updateDisplay(5);
+            strNumber += "5";
+        });
+
+        $(btns.key6).on("click", function key6Handler() {
+            updateDisplay(6);
+            strNumber += "6";
+        });
+
+        $(btns.key7).on("click", function key7Handler() {
+            updateDisplay(7);
+            strNumber += "7";
+        });
+
+        $(btns.key8).on("click", function key8Handler() {
+            updateDisplay(8);
+            strNumber += "8";
+        });
+
+        $(btns.key9).on("click", function key9Handler() {
+            updateDisplay(9);
+            strNumber += "9";
+        });
+
+        $(btns.keyClear).on("click", function keyClearHandler() {
+            updateDisplay(10);
+            updateExpressionChain("clear");
+            lastAnswer = null;
+        });
+
+        $(btns.keyDiv).on("click", function keyDivHandler() {
+            //Used to chain from last solution.
+            var chainingPossible = expressionChain.length === 0 && lastAnswer !== null;
+
+            //Used to prevent divide operator from being applied twice or without an operand.
+            var operatorAllowed = strNumber !== "";
+
+            if (chainingPossible) {
+                updateDisplay(11.1);
+                expressionChain[0] = lastAnswer;
+                expressionChain[1] = "/";
+            } else if (operatorAllowed) {
+                updateDisplay(11);
+                updateExpressionChain("/");
+            }
+        });
+
+        $(btns.keyTimes).on("click", function keyTimesHandler() {
+            //Used to chain from last solution.
+            var chainingPossible = expressionChain.length === 0 && lastAnswer !== null;
+
+            //Used to prevent times operator from being applied twice or without operand.
+            var operatorAllowed = strNumber !== "";
+
+            if (chainingPossible) {
+                updateDisplay(12.1);
+                expressionChain[0] = lastAnswer;
+                expressionChain[1] = "*";
+            } else if (operatorAllowed) {
+                updateDisplay(12);
+                updateExpressionChain("*");
+            }
+        });
+
+        //Minus button functions as subtraction or negation.
+        $(btns.keyMinus).on("click", function keyMinusHandler() {
+           //Used to chain from last solution.
+            var chainingPossible = expressionChain.length === 0 && lastAnswer !== null;
+
+            //Used to prevent plus operator from being applied twice or without operand.
+            var operatorAllowed = strNumber !== "";
+
+            if (chainingPossible) {
+                updateDisplay(13.1);
+                expressionChain[0] = lastAnswer;
+                expressionChain[1] = "-";
+            } else if (operatorAllowed) {
+                updateDisplay(13);
+                updateExpressionChain("-");
+            }
+        });
+
+        $(btns.keyPlus).on("click", function keyPlusHandler() {
+            //Used to chain from last solution.
+            var chainingPossible = expressionChain.length === 0 && lastAnswer !== null;
+
+            //Used to prevent plus operator from being applied twice or without operand.
+            var operatorAllowed = strNumber !== "";
+
+            if (chainingPossible) {
+                updateDisplay(14.1);
+                expressionChain[0] = lastAnswer;
+                expressionChain[1] = "+";
+            } else if (operatorAllowed) {
+                updateDisplay(14);
+                updateExpressionChain("+");
+            }
+        });
+
+        $(btns.keyDecimal).on("click", function keyDecimalHandler() {
+            //debugger;
+            var decimalAllowed = false;
+            
+            //Prevent multiple uses of decimal at a time
+            if (strNumber.indexOf('.') === -1) {
+                decimalAllowed = true;
+            }
+
+            //Insert a '0' if decimal is the first user input
+            if (strNumber === "" && decimalAllowed) {
+                updateDisplay(0);
+                strNumber += "0";
+                updateDisplay(15);
+                strNumber += ".";
+            } else if (decimalAllowed) {
+                updateDisplay(15);
+                strNumber += ".";
+            }
+        });
+
+        $(btns.keyEquals).on("click", function keyEqualsHandler() {
+            
+            //Repeat last operation when requested by user (e.g. 1+2=3, =5, =7, =9)
+            //FIXME[]: Problem when you have 5--6
+            if (lastAnswer !== null && expressionChain.length === 0) {
+                if (lastOperator !== undefined) {
+                    expressionChain[0] =  lastAnswer;
+                    expressionChain[1] = lastOperator;
+                    expressionChain[2] = lastOperand;
+                    expressionChain[3] = "solve!";
+                }
+            } else {
+                updateExpressionChain("solve!");
+            }
+
+            lastOperand = expressionChain[expressionChain.length - 2];
+            lastOperator = expressionChain[expressionChain.length - 3];
+            console.log("Last operator is: " + lastOperator);
+            findAnswer();
+            updateDisplay(16);
+            lastAnswer = answer;
+            console.log("Expression chain before clearing: " + expressionChain);
+            
+            //Reset
+            expressionChain = [];
+            display = "";
+            answer = 0;
+            console.log("Expression chain after clearing: " + expressionChain);
+        });
+
+    });
+
+}());
+
+//Reminder: transformOperators converts "minus" to "add" and "divide" to "times".
     //Arithmetic expressions can be boiled down to simple addition. This function exploits that fact.
     //E.g. 1 + 2 * 3 - 4 / 5 is 1 + 2 + 2 + 2 + (-1/5) + (-1/5) + (-1/5) + (-1/5)
-    function findAnswer() {
+    /*function findAnswer() {
         var i; //used for walking the expressionChain array
         var j; //used for walking a batch of numbers (in the expression chain array) that are multiplying each other
         var k; //used for walking the product array
@@ -377,239 +563,4 @@ problem (e.g. 0.1 + 0.2 = 0.30000000000000004, 0.1 * 0.2 = 0.020000000000000004,
         }
 
         answer = sumChainTotal.plus(productChainTotal);
-    }
-
-    $(document).ready(function buttonsHandler() {
-        
-        $(btns.keyNumber).on("click", function keyNumberHandler() {
-            //Reset calculator if user immediately enters a number after last calculation
-            if (lastAnswer !== null && expressionChain.length === 0) {
-                lastAnswer = null;
-            }
-        });
-        
-        $(btns.keyNumberNotZero).on("click", function keyNumberNotZeroHandler() {
-            checkUnnecessaryZero();
-            if (unnecessaryZero) {
-                removeUnnecessaryZero();
-            }
-        });
-        
-        $(btns.key0).on("click", function key0Handler() {
-            var zeroAllowed = false;
-            
-            if (strNumber === ""
-                    || (strNumber !== "" && strNumber[0] !== "0")
-                    || (strNumber !== "" && (strNumber[0] === "0" && strNumber[1] === "."))) {
-                zeroAllowed = true;
-            }
-            
-            if (zeroAllowed) {
-                updateDisplay(0);
-                strNumber += "0";
-            }
-            
-        });
-
-        $(btns.key1).on("click", function key1Handler() {
-            updateDisplay(1);
-            strNumber += "1";
-        });
-
-        $(btns.key2).on("click", function key2Handler() {
-            updateDisplay(2);
-            strNumber += "2";
-        });
-
-        $(btns.key3).on("click", function key3Handler() {
-            updateDisplay(3);
-            strNumber += "3";
-        });
-
-        $(btns.key4).on("click", function key4Handler() {
-            updateDisplay(4);
-            strNumber += "4";
-        });
-
-        $(btns.key5).on("click", function key5Handler() {
-            updateDisplay(5);
-            strNumber += "5";
-        });
-
-        $(btns.key6).on("click", function key6Handler() {
-            updateDisplay(6);
-            strNumber += "6";
-        });
-
-        $(btns.key7).on("click", function key7Handler() {
-            updateDisplay(7);
-            strNumber += "7";
-        });
-
-        $(btns.key8).on("click", function key8Handler() {
-            updateDisplay(8);
-            strNumber += "8";
-        });
-
-        $(btns.key9).on("click", function key9Handler() {
-            updateDisplay(9);
-            strNumber += "9";
-        });
-
-        $(btns.keyClear).on("click", function keyClearHandler() {
-            updateDisplay(10);
-            updateExpressionChain("clear");
-            lastAnswer = null;
-        });
-
-        $(btns.keyDiv).on("click", function keyDivHandler() {
-            //Used to chain from last solution.
-            var chainingPossible = expressionChain.length === 0 && lastAnswer !== null;
-
-            //Used to prevent divide operator from being applied twice or without an operand.
-            var operatorAllowed = strNumber !== "";
-
-            if (chainingPossible) {
-                updateDisplay(11.1);
-                expressionChain[0] = lastAnswer;
-                expressionChain[1] = "divide";
-            } else if (operatorAllowed) {
-                updateDisplay(11);
-                updateExpressionChain("divide");
-            }
-        });
-
-        $(btns.keyTimes).on("click", function keyTimesHandler() {
-            //Used to chain from last solution.
-            var chainingPossible = expressionChain.length === 0 && lastAnswer !== null;
-
-            //Used to prevent times operator from being applied twice or without operand.
-            var operatorAllowed = strNumber !== "";
-
-            if (chainingPossible) {
-                updateDisplay(12.1);
-                expressionChain[0] = lastAnswer;
-                expressionChain[1] = "times";
-            } else if (operatorAllowed) {
-                updateDisplay(12);
-                updateExpressionChain("times");
-            }
-        });
-
-        //Minus button functions as subtraction or negation.
-        $(btns.keyMinus).on("click", function keyMinusHandler() {
-            var isNegation; //true if minus button turns a number negative
-            var isSubtraction; //true if minus button functions as subtraction
-            var lastItem = expressionChain[expressionChain.length - 1];
-            var lastItemStr = strNumber[strNumber.length - 1];
-            var operatorAllowed; //true if subtraction or negation is allowed
-            var secondLastItem = expressionChain[expressionChain.length - 2];
-            var secondLastItemStr = strNumber[strNumber.length - 2];
-            var chainingPossible = expressionChain.length === 0
-                    && lastAnswer !== null; //Used to chain from last solution.
-
-            //First OR operand: For negation
-            //Second OR operand: For negation following an operator
-            //Third OR operand: To prevent too many `-` operators
-            //Fourth OR operand: For subtraction
-            if ((expressionChain.length === 0 && strNumber === "")
-                    || (isNaN(lastItem) && !isNaN(secondLastItem))
-                    || (!isNaN(lastItemStr) || !isNaN(secondLastItemStr))
-                    || (strNumber !== "")) {
-                operatorAllowed = true;
-            } else {
-                operatorAllowed = false;
-            }
-
-            isNegation = strNumber === "";
-
-            if (!isNegation) {
-                isSubtraction = true;
-            }
-
-            if (chainingPossible) {
-                updateDisplay(13.1);
-                expressionChain[0] = lastAnswer;
-                expressionChain[1] = "minus";
-            } else if (operatorAllowed && isSubtraction) {
-                updateDisplay(13);
-                updateExpressionChain("minus");
-            } else if (operatorAllowed && isNegation && !negationUsed) {
-                negationUsed = true;
-                updateDisplay(13.2);
-                updateExpressionChain("negation");
-            }
-        });
-
-        $(btns.keyPlus).on("click", function keyPlusHandler() {
-            //Used to chain from last solution.
-            var chainingPossible = expressionChain.length === 0 && lastAnswer !== null;
-
-            //Used to prevent plus operator from being applied twice or without operand.
-            var operatorAllowed = strNumber !== "";
-
-            if (chainingPossible) {
-                updateDisplay(14.1);
-                expressionChain[0] = lastAnswer;
-                expressionChain[1] = "add";
-            } else if (operatorAllowed) {
-                updateDisplay(14);
-                updateExpressionChain("add");
-            }
-        });
-
-        $(btns.keyDecimal).on("click", function keyDecimalHandler() {
-            //debugger;
-            var decimalAllowed = false;
-            
-            //Prevent multiple uses of decimal at a time
-            if (strNumber.indexOf('.') === -1) {
-                decimalAllowed = true;
-            }
-
-            //Insert a '0' if decimal is the first user input
-            if (strNumber === "" && decimalAllowed) {
-                updateDisplay(0);
-                strNumber += "0";
-                updateDisplay(15);
-                strNumber += ".";
-            } else if (decimalAllowed) {
-                updateDisplay(15);
-                strNumber += ".";
-            }
-        });
-
-        $(btns.keyEquals).on("click", function keyEqualsHandler() {
-            
-            //Repeat last operation when requested by user (e.g. 1+2=3, =5, =7, =9)
-            //FIXME[]: Problem when you have 5--6
-            if (lastAnswer !== null && expressionChain.length === 0) {
-                if (lastOperator !== undefined) {
-                    expressionChain[0] =  lastAnswer;
-                    expressionChain[1] = lastOperator;
-                    expressionChain[2] = lastOperand;
-                    expressionChain[3] = "solve!";
-                }
-            } else {
-                updateExpressionChain("solve!");
-            }
-
-            lastOperand = expressionChain[expressionChain.length - 2];
-            lastOperator = expressionChain[expressionChain.length - 3];
-            console.log("Last operator is: " + lastOperator);
-            transformOperators();
-            findAnswer();
-            updateDisplay(16);
-            lastAnswer = answer;
-            console.log("Expression chain before clearing: " + expressionChain);
-            
-            //Reset
-            expressionChain = [];
-            display = "";
-            answer = 0;
-            console.log("Expression chain after clearing: " + expressionChain);
-        });
-
-    });
-
-}());
+    }*/
