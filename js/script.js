@@ -8,7 +8,7 @@ GENERAL NOTES
 * Division is handled by converting the second number y to 1/y, i.e. x / y is x * (1/y).
 
 * bignumber.js is used for arbitrary-precision arithmetic and solves the floating-point arithmetic
-problem (e.g. 0.1 + 0.2 = 0.30000000000000004).
+problem (e.g. 0.1 + 0.2 = 0.30000000000000004, 0.1 * 0.2 = 0.020000000000000004, etc.).
 
 * User input is stored in the array `expressionChain` and then is evaluated when the `=` button is pressed.
 
@@ -20,6 +20,8 @@ problem (e.g. 0.1 + 0.2 = 0.30000000000000004).
 
 * Nonsensical decimal inputs like 0.0.2 or ...2 are prevented.
 
+* Decimal key inserts a zero as needed.
+
 * Repeating an operator is prevented (e.g. 5++5).
 
 * Pressing `=` after entering one number returns that number.
@@ -27,6 +29,7 @@ problem (e.g. 0.1 + 0.2 = 0.30000000000000004).
 * Calculator resets if user immediately enters a number after last calculation
 
 * Calculator repeats last operation when requested by user by pressing `=` (e.g. 1+2=3, =5, =7, =9)
+
 ******************************************************************************************************/
 
 (function joesCalculator() {
@@ -65,6 +68,7 @@ problem (e.g. 0.1 + 0.2 = 0.30000000000000004).
 
     function updateDisplay(btn) {
         var toConcat = ""; //String to concatenate with display.
+        
         BigNumber.config({ DECIMAL_PLACES: 10 });
 
         switch (btn) {
@@ -176,6 +180,7 @@ problem (e.g. 0.1 + 0.2 = 0.30000000000000004).
         }
     }
 
+    //Convert "minus" to "add" and "divide" to "times".
     function transformOperators() {
         var numerator = new BigNumber(1);
         var denominator;
@@ -195,7 +200,7 @@ problem (e.g. 0.1 + 0.2 = 0.30000000000000004).
             }
         });
     }
-    
+
     //Example of unnecessary zero is 02.
     function checkUnnecessaryZero() {
         if (strNumber !== ""
