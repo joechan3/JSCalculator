@@ -1,4 +1,4 @@
-/*global $, console, BigNumber, math*/
+/*global $, console, math*/
 /*jslint vars: true */
 
 /******************************************************************************************************
@@ -67,8 +67,6 @@ problem (e.g. 0.1 + 0.2 = 0.30000000000000004, 0.1 * 0.2 = 0.020000000000000004,
 
     function updateDisplay(btn) {
         var toConcat = ""; //String to concatenate with display.
-        
-        BigNumber.config({ DECIMAL_PLACES: 10 });
 
         switch (btn) {
         case 0:
@@ -111,7 +109,7 @@ problem (e.g. 0.1 + 0.2 = 0.30000000000000004, 0.1 * 0.2 = 0.020000000000000004,
         case 11.1: //Division button w/ last answer available
             display = "";
             $(".calc-display p").html(display);
-            toConcat = lastAnswer.toDigits(14).toString() + "&divide;";
+            toConcat = math.format(lastAnswer, 12) + "&divide;";
             break;
         case 12: //Times button
             toConcat = "&times;";
@@ -119,7 +117,7 @@ problem (e.g. 0.1 + 0.2 = 0.30000000000000004, 0.1 * 0.2 = 0.020000000000000004,
         case 12.1: //Times button w/ last answer available
             display = "";
             $(".calc-display p").html(display);
-            toConcat = lastAnswer.toDigits(14).toString() + "&times;";
+            toConcat = math.format(lastAnswer, 12) + "&times;";
             break;
         case 13: //Minus button
             toConcat = "-";
@@ -127,7 +125,7 @@ problem (e.g. 0.1 + 0.2 = 0.30000000000000004, 0.1 * 0.2 = 0.020000000000000004,
         case 13.1: //Minus button w/ last answer available
             display = "";
             $(".calc-display p").html(display);
-            toConcat = lastAnswer.toDigits(14).toString() + "&minus;";
+            toConcat = math.format(lastAnswer, 12) + "&minus;";
             break;
         case 13.2: //Negative button
             toConcat = "-";
@@ -138,14 +136,14 @@ problem (e.g. 0.1 + 0.2 = 0.30000000000000004, 0.1 * 0.2 = 0.020000000000000004,
         case 14.1: //Sum button w/ last answer available
             display = "";
             $(".calc-display p").html(display);
-            toConcat = lastAnswer.toDigits(14).toString() + "&plus;";
+            toConcat = math.format(lastAnswer, 12) + "&plus;";
             break;
         case 15: //Decimal button
             toConcat = ".";
             break;
         case 16: //Equals button
             toConcat = "";
-            display = answer.toString();
+            display = math.format(answer, 12);
             break;
         default:
             throw "Invalid input";
@@ -157,19 +155,12 @@ problem (e.g. 0.1 + 0.2 = 0.30000000000000004, 0.1 * 0.2 = 0.020000000000000004,
 
     //Triggered by operator type buttons.
     function updateExpressionChain(str) {
-        var indexOfLastOperator;
-
-        if (str === "clear") {
-            expressionChain = [];
-            lastAnswer = null;
-        } else {
-            expressionChain.push(parseFloat(strNumber, 10));
+        expressionChain.push(parseFloat(strNumber, 10));
             
-            if (str !== "solve!") {
-                expressionChain.push(str);
-            }
-            strNumber = "";
+        if (str !== "solve!") {
+            expressionChain.push(str);
         }
+        strNumber = "";
     }
 
     //Example of unnecessary zero is 02.
@@ -220,6 +211,10 @@ problem (e.g. 0.1 + 0.2 = 0.30000000000000004, 0.1 * 0.2 = 0.020000000000000004,
         $(btns.key0).on("click", function key0Handler() {
             var zeroAllowed = false;
             
+            //Zero is allowed for the following conditions:
+            //1. Zero is the first number inputed by user.
+            //2. Zero follows any number but zero.
+            //3. Zero follows a zero and a decimal (i.e., `0.`)
             if (strNumber === ""
                     || (strNumber !== "" && strNumber[0] !== "0")
                     || (strNumber !== "" && (strNumber[0] === "0" && strNumber[1] === "."))) {
@@ -280,8 +275,9 @@ problem (e.g. 0.1 + 0.2 = 0.30000000000000004, 0.1 * 0.2 = 0.020000000000000004,
 
         $(btns.keyClear).on("click", function keyClearHandler() {
             updateDisplay(10);
-            updateExpressionChain("clear");
+            expressionChain = [];
             lastAnswer = null;
+            answer = 0;
         });
 
         $(btns.keyDiv).on("click", function keyDivHandler() {
