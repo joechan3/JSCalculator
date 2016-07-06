@@ -12,9 +12,21 @@ problem (e.g. 0.1 + 0.2 = 0.30000000000000004).
 
 * User input is stored in the array `expressionChain` and then is evaluated when the `=` button is pressed.
 
-* Chaining from the last solution (after pressing `=`) is possible.
+* Chaining operations from the last solution (after pressing `=`) is possible.
 
 * `-` button functions as subtraction or negation depending on conditions.
+
+* Unnecessary zero inputs like 002 are prevented or automatically deleted (e.g. 02 becomes 2).
+
+* Nonsensical decimal inputs like 0.0.2 or ...2 are prevented.
+
+* Repeating an operator is prevented (e.g. 5++5).
+
+* Pressing `=` after entering one number returns that number.
+
+* Calculator resets if user immediately enters a number after last calculation
+
+* Calculator repeats last operation when requested by user by pressing `=` (e.g. 1+2=3, =5, =7, =9)
 ******************************************************************************************************/
 
 (function joesCalculator() {
@@ -230,7 +242,6 @@ problem (e.g. 0.1 + 0.2 = 0.30000000000000004).
         var isGeneralCase4; //defined in main for loop below
 
         //For cases where user enters a number then presses `=` button, e.g. [5, "solve!"]
-        //FIXME[]: but when I press "=" second time I got 0
         if (expressionChain.length === 2
                 && !isNaN(expressionChain[0])) {
             sumChain.push(firstOperand);
@@ -370,7 +381,6 @@ problem (e.g. 0.1 + 0.2 = 0.30000000000000004).
             if (lastAnswer !== null && expressionChain.length === 0) {
                 lastAnswer = null;
             }
-            
         });
         
         $(btns.keyNumberNotZero).on("click", function keyNumberNotZeroHandler() {
@@ -444,7 +454,7 @@ problem (e.g. 0.1 + 0.2 = 0.30000000000000004).
         $(btns.keyClear).on("click", function keyClearHandler() {
             updateDisplay(10);
             updateExpressionChain("clear");
-            //TODO: lastanswer = null here? without it, random errors happen?
+            lastAnswer = null;
         });
 
         $(btns.keyDiv).on("click", function keyDivHandler() {
