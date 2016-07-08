@@ -4,30 +4,30 @@
 /******************************************************************************************************
 GENERAL NOTES
 
-* math.js is used for arbitrary-precision arithmetic and solves the floating-point arithmetic
+* math.js BigNumber is used for arbitrary-precision arithmetic and solves the floating-point arithmetic
 problem (e.g. 0.1 + 0.2 = 0.30000000000000004, 0.1 * 0.2 = 0.020000000000000004, etc.).
+
+* math.js is used for arithmetic expressions.
 
 * User input is stored in the array `expressionChain` and then is evaluated when the `=` button is pressed.
 
-* [x] Chaining operations from the last solution (after pressing `=`) is possible.
+* Chaining operations from the last solution (after pressing `=`) is possible.
 
-* [x]`-` button functions as subtraction or negation depending on conditions.
+* `-` button functions as subtraction or negation depending on conditions.
 
 * Unnecessary zero inputs like 002 are prevented or automatically deleted (e.g. 02 becomes 2).
 
-* [x]Nonsensical decimal inputs like 0.0.2 or ...2 are prevented.
+* Nonsensical decimal inputs like 0.0.2 or ...2 are prevented.
 
-* [x]Decimal key inserts a zero as needed.
+* Decimal key inserts a zero as needed.
 
-* [x]Repeating an operator is prevented (e.g. 5++5).
+* Repeating an operator is prevented (e.g. 5++5).
 
-* [x]Pressing `=` after entering one number returns that number.
+* Pressing `=` after entering one number returns that number.
 
-* [x]Calculator resets if user immediately enters a number after last calculation
+* Calculator resets if user immediately enters a number after last calculation.
 
-* [x]Calculator repeats last operation when requested by user by pressing `=` (e.g. 1+2=3, =5, =7, =9)
-
-
+* Calculator repeats last operation when requested by user by pressing `=` (e.g. 1+2=3, =5, =7, =9).
 
 ******************************************************************************************************/
 
@@ -152,11 +152,11 @@ problem (e.g. 0.1 + 0.2 = 0.30000000000000004, 0.1 * 0.2 = 0.020000000000000004,
     //Triggered by operator type buttons.
     function updateExpressionChain(str) {
         var negationUsed = strNumber === "" && str === "-";
-        
+
         if (!negationUsed) {
             expressionChain.push(parseFloat(strNumber, 10));
         }
-  
+
         if (str !== "solve!") {
             expressionChain.push(str);
         }
@@ -165,21 +165,21 @@ problem (e.g. 0.1 + 0.2 = 0.30000000000000004, 0.1 * 0.2 = 0.020000000000000004,
 
     function findAnswer() {
         math.config({
-            number: 'BigNumber',
+            number: "BigNumber",
             precision: 64
         });
         answer = math.eval(expressionChain.join(""));
     }
 
     $(document).ready(function buttonsHandler() {
-        
+
         $(btns.keyNumber).on("click", function keyNumberHandler() {
             //Reset calculator if user immediately enters a number after last calculation
             if (lastAnswer !== null && expressionChain.length === 0) {
                 lastAnswer = null;
             }
         });
-        
+
         $(btns.keyNumberNotZero).on("click", function keyNumberNotZeroHandler() {
             //Example of unnecessary zero is 02.
             function checkUnnecessaryZero() {
@@ -188,7 +188,7 @@ problem (e.g. 0.1 + 0.2 = 0.30000000000000004, 0.1 * 0.2 = 0.020000000000000004,
                     unnecessaryZero = true;
                 }
             }
-        
+
             function removeUnnecessaryZero() {
                 var zeroIndex = display.lastIndexOf("0");
 
@@ -201,18 +201,18 @@ problem (e.g. 0.1 + 0.2 = 0.30000000000000004, 0.1 * 0.2 = 0.020000000000000004,
                 strNumber = strNumber.substring(1);
                 unnecessaryZero = false;
             }
-            
+
             checkUnnecessaryZero();
-            
+
             if (unnecessaryZero) {
                 removeUnnecessaryZero();
             }
-            
+
         });
-        
+
         $(btns.key0).on("click", function key0Handler() {
             var zeroAllowed = false;
-            
+
             //Zero is allowed for the following conditions:
             //1. Zero is the first number inputed by user.
             //2. Zero follows any number but zero.
@@ -222,12 +222,11 @@ problem (e.g. 0.1 + 0.2 = 0.30000000000000004, 0.1 * 0.2 = 0.020000000000000004,
                     || (strNumber !== "" && (strNumber[0] === "0" && strNumber[1] === "."))) {
                 zeroAllowed = true;
             }
-            
+
             if (zeroAllowed) {
                 updateDisplay(0);
                 strNumber += "0";
             }
-            
         });
 
         $(btns.key1).on("click", function key1Handler() {
@@ -278,8 +277,8 @@ problem (e.g. 0.1 + 0.2 = 0.30000000000000004, 0.1 * 0.2 = 0.020000000000000004,
         $(btns.keyClear).on("click", function keyClearHandler() {
             updateDisplay(10);
             expressionChain = [];
-            lastAnswer = null;
             answer = 0;
+            lastAnswer = null;
             strNumber = "";
         });
 
@@ -322,7 +321,7 @@ problem (e.g. 0.1 + 0.2 = 0.30000000000000004, 0.1 * 0.2 = 0.020000000000000004,
            //Used to chain from last solution.
             var chainingPossible = expressionChain.length === 0 && lastAnswer !== null;
 
-            //Unlike other operators, minus operator is always allowed 
+            //Unlike other operators, minus operator is always allowed
             //because multiple minus operators naturally cancel out as needed.
             //E.g. 5--5 = 5+5
             var operatorAllowed = true;
@@ -355,11 +354,10 @@ problem (e.g. 0.1 + 0.2 = 0.30000000000000004, 0.1 * 0.2 = 0.020000000000000004,
         });
 
         $(btns.keyDecimal).on("click", function keyDecimalHandler() {
-            //debugger;
             var decimalAllowed = false;
-            
+
             //Prevent multiple uses of decimal at a time
-            if (strNumber.indexOf('.') === -1) {
+            if (strNumber.indexOf(".") === -1) {
                 decimalAllowed = true;
             }
 
@@ -379,12 +377,12 @@ problem (e.g. 0.1 + 0.2 = 0.30000000000000004, 0.1 * 0.2 = 0.020000000000000004,
             if (lastAnswer !== null && expressionChain.length === 0) {
                 if (lastOperator !== null) {
                     //Repeat last operation when requested by user (e.g. 1+2=3, =5, =7, =9)
-                    expressionChain[0] =  lastAnswer;
+                    expressionChain[0] = lastAnswer;
                     expressionChain[1] = lastOperator;
                     expressionChain[2] = lastOperand;
                 } else {
                     //For cases where user enters a number then presses `=` button
-                    expressionChain[0] =  lastAnswer;
+                    expressionChain[0] = lastAnswer;
                 }
             } else {
                 updateExpressionChain("solve!");
@@ -400,6 +398,7 @@ problem (e.g. 0.1 + 0.2 = 0.30000000000000004, 0.1 * 0.2 = 0.020000000000000004,
 
             findAnswer();
             updateDisplay(16);
+
             lastAnswer = answer;
 
             //Reset
