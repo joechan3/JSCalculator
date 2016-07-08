@@ -19,7 +19,7 @@ problem (e.g. 0.1 + 0.2 = 0.30000000000000004, 0.1 * 0.2 = 0.020000000000000004,
 
 * Nonsensical decimal inputs like 0.0.2 or ...2 are prevented.
 
-* Decimal key inserts a zero as needed.
+* Decimal key inserts a leading zero as needed.
 
 * Repeating an operator is prevented (e.g. 5++5).
 
